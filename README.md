@@ -1,8 +1,8 @@
 # gh-search
 
-Search GitHub code from the command line.
+Search GitHub code from the command line. Inspired by [ghx](https://github.com/johnlindquist/ghx).
 
-**GitHub CLI Extension** - Extends the `gh` command with intelligent code search capabilities. Inspired by the great [ghx](https://github.com/johnlindquist/ghx). Learn more about [GitHub CLI extensions](https://cli.github.com/manual/gh_extension).
+**GitHub CLI Extension** - Extends the `gh` command with intelligent code search capabilities. Learn more about [GitHub CLI extensions](https://cli.github.com/manual/gh_extension).
 
 ## Installation
 
