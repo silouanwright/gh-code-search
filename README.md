@@ -232,19 +232,6 @@ gh-search follows professional CLI development patterns:
 - **Modular Architecture**: Clean separation of concerns
 - **Performance Optimized**: Efficient Go implementation with caching
 
-## 🤝 Compatibility with ghx
-
-gh-search maintains compatibility with ghx command patterns:
-
-```bash
-# ghx command
-ghx --language typescript --extension tsx useState --limit 5
-
-# Equivalent gh-search command  
-gh search "useState" --language typescript --extension tsx --limit 5
-```
-
-All familiar flags and functionality are preserved while adding new capabilities.
 
 ## 🐛 Troubleshooting
 
