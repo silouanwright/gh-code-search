@@ -5,7 +5,7 @@
 
 A professional GitHub CLI extension for intelligent code search and configuration discovery. Find working examples, configuration patterns, and best practices across millions of repositories.
 
-> **Inspired by the great [ghx](https://github.com/johnlindquist/ghx), just as a GitHub CLI extension** with enhanced features, better architecture, and improved performance.
+> **Inspired by the great [ghx](https://github.com/johnlindquist/ghx), just as a GitHub CLI extension**.
 
 ## ✨ Features
 
