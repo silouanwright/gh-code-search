@@ -1,53 +1,16 @@
 # gh-search
 
-[![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)](https://golang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Search GitHub code from the command line.
 
-A professional GitHub CLI extension for intelligent code search and configuration discovery. Find working examples, configuration patterns, and best practices across millions of repositories.
+**GitHub CLI Extension** - Extends the `gh` command with intelligent code search capabilities. Inspired by the great [ghx](https://github.com/johnlindquist/ghx). Learn more about [GitHub CLI extensions](https://cli.github.com/manual/gh_extension).
 
-> **Inspired by the great [ghx](https://github.com/johnlindquist/ghx), just as a GitHub CLI extension**.
+## Installation
 
-## ✨ Features
-
-- 🔍 **Intelligent Search**: Enhanced GitHub code search with smart filtering
-- ⚙️ **Configuration Discovery**: Find real-world config examples and patterns  
-- 🎯 **Quality Filtering**: Filter by repository stars, language, file type, and more
-- 📊 **Rich Output**: Beautiful markdown formatting with syntax highlighting
-- 💾 **Saved Searches**: Save and reuse common search patterns
-- 🔧 **Professional Architecture**: Interface-based design with comprehensive testing
-- 🚀 **High Performance**: Fast Go implementation with intelligent caching
-- 🛡️ **Error Handling**: Actionable error messages with helpful suggestions
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- [GitHub CLI](https://cli.github.com/) installed and authenticated
-- Go 1.21+ (for building from source)
-
-```bash
-# Verify GitHub CLI is set up
-gh auth status
-```
-
-### Installation
-
-#### Option 1: Install as GitHub CLI Extension (Recommended)
 ```bash
 gh extension install silouanwright/gh-search
-gh search --help
 ```
 
-#### Option 2: Build from Source
-```bash
-git clone https://github.com/silouanwright/gh-search.git
-cd gh-search
-go build -o gh-search
-./gh-search --help
-```
-
-#### Option 3: Download Binary
-Download the latest release from [GitHub Releases](https://github.com/silouanwright/gh-search/releases).
+Requires [GitHub CLI](https://cli.github.com/) (`gh auth login` to authenticate).
 
 ## 📖 Usage
 
