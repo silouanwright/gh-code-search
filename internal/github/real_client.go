@@ -178,7 +178,7 @@ func convertSearchResults(result *github.CodeSearchResult) *SearchResults {
 	items := make([]SearchItem, len(result.CodeResults))
 	
 	for i, item := range result.CodeResults {
-		items[i] = convertSearchItem(&item)
+		items[i] = convertSearchItem(item)
 	}
 
 	return &SearchResults{
@@ -192,18 +192,15 @@ func convertSearchResults(result *github.CodeSearchResult) *SearchResults {
 func convertSearchItem(item *github.CodeResult) SearchItem {
 	var textMatches []TextMatch
 	for _, match := range item.TextMatches {
-		textMatches = append(textMatches, convertTextMatch(&match))
+		textMatches = append(textMatches, convertTextMatch(match))
 	}
 
 	return SearchItem{
 		Name:        item.Name,
 		Path:        item.Path,
 		SHA:         item.SHA,
-		URL:         item.URL,
-		GitURL:      item.GitURL,
 		HTMLURL:     item.HTMLURL,
 		Repository:  convertRepository(item.Repository),
-		Score:       item.Score,
 		TextMatches: textMatches,
 	}
 }
@@ -222,6 +219,17 @@ func convertRepository(repo *github.Repository) Repository {
 		}
 	}
 
+	var createdAt, updatedAt, pushedAt *time.Time
+	if repo.CreatedAt != nil {
+		createdAt = &repo.CreatedAt.Time
+	}
+	if repo.UpdatedAt != nil {
+		updatedAt = &repo.UpdatedAt.Time
+	}
+	if repo.PushedAt != nil {
+		pushedAt = &repo.PushedAt.Time
+	}
+
 	return Repository{
 		ID:              repo.ID,
 		NodeID:          repo.NodeID,
@@ -232,9 +240,9 @@ func convertRepository(repo *github.Repository) Repository {
 		HTMLURL:         repo.HTMLURL,
 		Description:     repo.Description,
 		Fork:            repo.Fork,
-		CreatedAt:       repo.CreatedAt,
-		UpdatedAt:       repo.UpdatedAt,
-		PushedAt:        repo.PushedAt,
+		CreatedAt:       createdAt,
+		UpdatedAt:       updatedAt,
+		PushedAt:        pushedAt,
 		StargazersCount: repo.StargazersCount,
 		WatchersCount:   repo.WatchersCount,
 		ForksCount:      repo.ForksCount,
@@ -266,8 +274,8 @@ func convertTextMatch(match *github.TextMatch) TextMatch {
 func extractValidationErrors(errorResp *github.ErrorResponse) []string {
 	var errors []string
 	for _, err := range errorResp.Errors {
-		if err.Message != nil {
-			errors = append(errors, *err.Message)
+		if err.Message != "" {
+			errors = append(errors, err.Message)
 		}
 	}
 	return errors

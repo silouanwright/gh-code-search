@@ -278,15 +278,6 @@ func createGitHubClient() (github.GitHubAPI, error) {
 	return github.NewRealClient()
 }
 
-// Placeholder error handlers (will be enhanced)
-func handleClientError(err error) error {
-	return fmt.Errorf("failed to create GitHub client: %w", err)
-}
-
-func handleSearchError(err error, query string) error {
-	return fmt.Errorf("search failed for query '%s': %w", query, err)
-}
-
 func init() {
 	// Add search command to root
 	rootCmd.AddCommand(searchCmd)
