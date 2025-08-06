@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"os"
 	"testing"
 	"time"
 
@@ -512,12 +515,37 @@ type capturedOutput struct {
 
 // captureOutput captures stdout/stderr during function execution
 func captureOutput(fn func() error) capturedOutput {
-	// This is a simplified version - in a real implementation,
-	// you might want to capture actual stdout/stderr
+	// Save original stdout and stderr
+	oldStdout := os.Stdout
+	oldStderr := os.Stderr
+	
+	// Create pipes for stdout and stderr
+	stdoutR, stdoutW, _ := os.Pipe()
+	stderrR, stderrW, _ := os.Pipe()
+	
+	// Redirect stdout and stderr
+	os.Stdout = stdoutW
+	os.Stderr = stderrW
+	
+	// Execute function
 	err := fn()
+	
+	// Close write ends
+	stdoutW.Close()
+	stderrW.Close()
+	
+	// Restore original stdout and stderr
+	os.Stdout = oldStdout
+	os.Stderr = oldStderr
+	
+	// Read captured output
+	var stdoutBuf, stderrBuf bytes.Buffer
+	io.Copy(&stdoutBuf, stdoutR)
+	io.Copy(&stderrBuf, stderrR)
+	
 	return capturedOutput{
-		stdout: "", // Would capture actual output in real implementation
-		stderr: "",
+		stdout: stdoutBuf.String(),
+		stderr: stderrBuf.String(),
 		err:    err,
 	}
 }
@@ -737,6 +765,119 @@ func createMultipleTestItems(count int) []github.SearchItem {
 		)
 	}
 	return items
+}
+
+// TestTextMatchesInResults tests that we properly request and display code fragments
+func TestTextMatchesInResults(t *testing.T) {
+	tests := []struct {
+		name           string
+		args           []string
+		mockSetup      func(*github.MockClient)
+		expectedOutput string
+		description    string
+	}{
+		{
+			name: "search results include code fragments",
+			args: []string{"useState"},
+			mockSetup: func(mock *github.MockClient) {
+				// Create search item with text matches (code fragments)
+				item := github.CreateTestSearchItem("facebook/react", "src/hooks.tsx", "function useState")
+				item.TextMatches = []github.TextMatch{
+					{
+						Fragment: github.StringPtr("export function useState<T>(initialValue: T): [T, SetState<T>] {\n  const [state, setState] = React.useState(initialValue);\n  return [state, setState];\n}"),
+						Property: github.StringPtr("content"),
+					},
+				}
+				mock.SetSearchResults("useState", github.CreateTestSearchResults(1, item))
+			},
+			expectedOutput: "export function useState",
+			description:    "Should display code fragments from TextMatches",
+		},
+		{
+			name: "multiple text matches per file",
+			args: []string{"console.log"},
+			mockSetup: func(mock *github.MockClient) {
+				item := github.CreateTestSearchItem("example/repo", "debug.js", "console logging")
+				item.TextMatches = []github.TextMatch{
+					{
+						Fragment: github.StringPtr("console.log('Starting application');"),
+						Property: github.StringPtr("content"),
+					},
+					{
+						Fragment: github.StringPtr("console.log('Error occurred:', error);"),
+						Property: github.StringPtr("content"),
+					},
+				}
+				mock.SetSearchResults("console.log", github.CreateTestSearchResults(1, item))
+			},
+			expectedOutput: "console.log('Starting application')",
+			description:    "Should display multiple code fragments when present",
+		},
+		{
+			name: "language detection for syntax highlighting",
+			args: []string{"interface"},
+			mockSetup: func(mock *github.MockClient) {
+				item := github.CreateTestSearchItem("microsoft/types", "src/api.ts", "TypeScript interface")
+				item.TextMatches = []github.TextMatch{
+					{
+						Fragment: github.StringPtr("interface ApiResponse {\n  status: number;\n  data: any;\n}"),
+						Property: github.StringPtr("content"),
+					},
+				}
+				mock.SetSearchResults("interface", github.CreateTestSearchResults(1, item))
+			},
+			expectedOutput: "```typescript",
+			description:    "Should detect TypeScript language and add syntax highlighting",
+		},
+		{
+			name: "no text matches fallback",
+			args: []string{"config"},
+			mockSetup: func(mock *github.MockClient) {
+				// Create item without text matches
+				item := github.CreateTestSearchItem("example/repo", "config.json", "config file")
+				item.TextMatches = []github.TextMatch{} // Empty - no fragments
+				mock.SetSearchResults("config", github.CreateTestSearchResults(1, item))
+			},
+			expectedOutput: "config.json",
+			description:    "Should still show file info even without text matches",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset flags
+			resetSearchFlags()
+			defer resetSearchFlags()
+
+			// Set up mock client
+			mockClient := github.NewMockClient()
+			if tt.mockSetup != nil {
+				tt.mockSetup(mockClient)
+			}
+
+			originalClient := searchClient
+			searchClient = mockClient
+			defer func() { searchClient = originalClient }()
+
+			// Capture output
+			output := captureOutput(func() error {
+				return runSearch(searchCmd, tt.args)
+			})
+
+			// Verify no error
+			assert.NoError(t, output.err, tt.description)
+
+			// Verify expected content is in output
+			if tt.expectedOutput != "" {
+				assert.Contains(t, output.stdout, tt.expectedOutput, 
+					"Output should contain expected text fragment (%s)", tt.description)
+			}
+
+			// Verify API was called
+			assert.Equal(t, 1, mockClient.GetCallCount("SearchCode"), 
+				"Should make exactly one search API call (%s)", tt.description)
+		})
+	}
 }
 
 // TestGhxCompatibility tests compatibility with original ghx command patterns
