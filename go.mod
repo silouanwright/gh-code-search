@@ -1,4 +1,4 @@
-module github.com/silouanwright/gh-search
+module github.com/silouanwright/gh-code-search
 
 go 1.23.0
 
@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

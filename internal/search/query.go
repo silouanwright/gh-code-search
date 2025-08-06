@@ -15,17 +15,17 @@ type QueryBuilder struct {
 
 // SearchFilters represents common search filter options
 type SearchFilters struct {
-	Language    string   `json:"language,omitempty"`
-	Filename    string   `json:"filename,omitempty"`
-	Extension   string   `json:"extension,omitempty"`
-	Repository  []string `json:"repository,omitempty"`
-	Path        string   `json:"path,omitempty"`
-	Owner       []string `json:"owner,omitempty"`
-	Size        string   `json:"size,omitempty"`
-	MinStars    int      `json:"min_stars,omitempty"`
-	MaxAge      string   `json:"max_age,omitempty"`
-	Fork        string   `json:"fork,omitempty"`
-	Match       []string `json:"match,omitempty"`
+	Language    string   `json:"language,omitempty" yaml:"language,omitempty"`
+	Filename    string   `json:"filename,omitempty" yaml:"filename,omitempty"`
+	Extension   string   `json:"extension,omitempty" yaml:"extension,omitempty"`
+	Repository  []string `json:"repository,omitempty" yaml:"repository,omitempty"`
+	Path        string   `json:"path,omitempty" yaml:"path,omitempty"`
+	Owner       []string `json:"owner,omitempty" yaml:"owner,omitempty"`
+	Size        string   `json:"size,omitempty" yaml:"size,omitempty"`
+	MinStars    int      `json:"min_stars,omitempty" yaml:"min_stars,omitempty"`
+	MaxAge      string   `json:"max_age,omitempty" yaml:"max_age,omitempty"`
+	Fork        string   `json:"fork,omitempty" yaml:"fork,omitempty"`
+	Match       []string `json:"match,omitempty" yaml:"match,omitempty"`
 }
 
 // NewQueryBuilder creates a new QueryBuilder with search terms

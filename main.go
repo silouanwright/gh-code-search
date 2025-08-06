@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/silouanwright/gh-search/cmd"
+	"github.com/silouanwright/gh-code-search/cmd"
 )
 
 func main() {

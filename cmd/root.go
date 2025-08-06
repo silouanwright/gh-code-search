@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/silouanwright/gh-search/internal/config"
+	"github.com/silouanwright/gh-code-search/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "gh-search",
+	Use:   "gh-code-search",
 	Short: "GitHub code search with intelligent filtering and analysis",
 	Long: `Search GitHub's vast codebase to find working examples and configurations.
 
@@ -28,19 +28,19 @@ and best practices across millions of repositories.
 Results include code context, repository information, and intelligent
 ranking based on repository quality indicators.`,
 	Example: `  # Find TypeScript configurations
-  gh search "tsconfig.json" --language json --limit 10
+  gh code-search "tsconfig.json" --language json --limit 10
 
   # Search React components with hooks
-  gh search "useState" --language typescript --extension tsx
+  gh code-search "useState" --language typescript --extension tsx
 
   # Find Docker configurations in popular repos
-  gh search "dockerfile" --filename dockerfile --repo "**/react" --limit 5
+  gh code-search "dockerfile" --filename dockerfile --repo "**/react" --limit 5
 
   # Export results to file
-  gh search "vite.config" --language javascript --output configs.md
+  gh code-search "vite.config" --language javascript --output configs.md
 
   # Search multiple organizations
-  gh search "eslint.config.js" --owner microsoft --owner google`,
+  gh code-search "eslint.config.js" --owner microsoft --owner google`,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 }
@@ -57,7 +57,7 @@ func init() {
 	// Global flags following gh-comment patterns
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output with detailed logging")
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "show what would be searched without executing")
-	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file path (default: ~/.gh-search.yaml)")
+	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file path (default: ~/.gh-code-search.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "disable colored output")
 
 	// Mark flags as hidden if they're primarily for debugging
@@ -92,7 +92,7 @@ func initConfig() {
 		if configPath == "" {
 			configPath = "default locations"
 		}
-		fmt.Fprintf(os.Stderr, "gh-search initialized with config from: %s\n", configPath)
+		fmt.Fprintf(os.Stderr, "gh-code-search initialized with config from: %s\n", configPath)
 	}
 }
 

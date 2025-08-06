@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/silouanwright/gh-search/internal/github"
+	"github.com/silouanwright/gh-code-search/internal/github"
 )
 
 // handleSearchError provides intelligent error handling with actionable guidance
@@ -26,7 +26,7 @@ func handleSearchError(err error, query string) error {
   • Wait %s for automatic reset
   • Use more specific search terms: --language, --repo, --filename
   • Search specific repositories: --repo owner/repo
-  • Use saved searches: gh search saved list
+  • Use saved searches: gh code-search saved list
 
 📊 **Rate Limit Status**:
   • Limit: %d searches per hour
@@ -34,9 +34,9 @@ func handleSearchError(err error, query string) error {
   • Reset: %s
 
 🔧 **Try These Alternatives**:
-  gh search "config" --repo facebook/react --language json
-  gh search "tsconfig" --filename tsconfig.json --limit 10
-  gh search --saved popular-configs`, err, resetTime, rateLimitErr.Limit, rateLimitErr.Remaining, resetTime)
+  gh code-search "config" --repo facebook/react --language json
+  gh code-search "tsconfig" --filename tsconfig.json --limit 10
+  gh code-search --saved popular-configs`, err, resetTime, rateLimitErr.Limit, rateLimitErr.Remaining, resetTime)
 	}
 
 	// Abuse rate limiting
@@ -57,8 +57,8 @@ func handleSearchError(err error, query string) error {
   • Use more specific queries to reduce load
 
 🔧 **Optimize Your Searches**:
-  gh search "specific term" --repo known/repo --language go
-  gh search --filename package.json --path examples/`, err, retryAfter)
+  gh code-search "specific term" --repo known/repo --language go
+  gh code-search --filename package.json --path examples/`, err, retryAfter)
 	}
 
 	// Authentication errors
@@ -76,7 +76,7 @@ func handleSearchError(err error, query string) error {
   • Detailed repository metadata
 
 🚀 **After Authentication**:
-  gh search "your query here"`, err)
+  gh code-search "your query here"`, err)
 	}
 
 	// Authorization/Permission errors
@@ -95,8 +95,8 @@ func handleSearchError(err error, query string) error {
   • Contact repository owner for access
 
 🔍 **Alternative Searches**:
-  gh search "similar terms" --repo public/repo
-  gh search "pattern" --language javascript --min-stars 100`, err)
+  gh code-search "similar terms" --repo public/repo
+  gh code-search "pattern" --language javascript --min-stars 100`, err)
 	}
 
 	// Resource not found
@@ -115,7 +115,7 @@ func handleSearchError(err error, query string) error {
   • Search similar repositories: --repo facebook/* --repo vercel/*
 
 🔍 **Broader Search**:
-  gh search "your terms" --language typescript --min-stars 50`, err)
+  gh code-search "your terms" --language typescript --min-stars 50`, err)
 	}
 
 	// Query validation errors
@@ -134,14 +134,14 @@ func handleSearchError(err error, query string) error {
   • Language filters: language:go
 
 📖 **Corrected Examples**:
-  gh search "tsconfig.json" --language json
-  gh search "useEffect" --language typescript --extension tsx
-  gh search "dockerfile" --filename dockerfile --repo facebook/react
+  gh code-search "tsconfig.json" --language json
+  gh code-search "useEffect" --language typescript --extension tsx
+  gh code-search "dockerfile" --filename dockerfile --repo facebook/react
 
 🚀 **Quick Fixes**:
-  gh search "simplified terms" --language typescript
-  gh search config --filename tsconfig.json
-  gh search pattern --repo owner/repo --language go`, err, query, formatValidationErrors(validationErr.Errors))
+  gh code-search "simplified terms" --language typescript
+  gh code-search config --filename tsconfig.json
+  gh code-search pattern --repo owner/repo --language go`, err, query, formatValidationErrors(validationErr.Errors))
 	}
 
 	// No results found
@@ -156,13 +156,13 @@ func handleSearchError(err error, query string) error {
   • Try related terms: "setup", "options", "settings"
 
 🔍 **Alternative Searches**:
-  gh search "config" --language javascript --min-stars 100
-  gh search "package.json" --path examples/ --limit 10
-  gh search "typescript" --filename tsconfig.json
+  gh code-search "config" --language javascript --min-stars 100
+  gh code-search "package.json" --path examples/ --limit 10
+  gh code-search "typescript" --filename tsconfig.json
 
 📖 **Browse Common Patterns**:
-  gh search patterns --help    # See pattern analysis features
-  gh search saved list         # Browse saved searches`, query)
+  gh code-search patterns --help    # See pattern analysis features
+  gh code-search saved list         # Browse saved searches`, query)
 	}
 
 	// Network/connectivity issues
@@ -182,8 +182,8 @@ func handleSearchError(err error, query string) error {
   • Wait a few minutes and retry
 
 🚀 **Retry Commands**:
-  gh search "simple query" --limit 5 --verbose
-  gh search --rate-limit  # Check API status`, err)
+  gh code-search "simple query" --limit 5 --verbose
+  gh code-search --rate-limit  # Check API status`, err)
 	}
 
 	// Client creation errors
@@ -204,7 +204,7 @@ func handleSearchError(err error, query string) error {
   1. Install gh CLI: brew install gh (macOS) or see docs
   2. Login: gh auth login --web
   3. Test: gh auth status
-  4. Retry: gh search "test query"`, err)
+  4. Retry: gh code-search "test query"`, err)
 	}
 
 	// Generic fallback with helpful context
@@ -218,14 +218,14 @@ func handleSearchError(err error, query string) error {
   • Reduce result limit: --limit 10
 
 📖 **Get Help**:
-  gh search --help           # Command documentation
-  gh search patterns --help  # Pattern analysis features
-  gh search saved --help     # Saved searches management
+  gh code-search --help           # Command documentation
+  gh code-search patterns --help  # Pattern analysis features
+  gh code-search saved --help     # Saved searches management
 
 🚀 **Common Solutions**:
-  gh search "simple terms" --language go --limit 5
-  gh search config --filename package.json
-  gh search pattern --repo popular/repo`, err)
+  gh code-search "simple terms" --language go --limit 5
+  gh code-search config --filename package.json
+  gh code-search pattern --repo popular/repo`, err)
 }
 
 // handleClientError provides guidance for GitHub client creation failures
@@ -233,7 +233,7 @@ func handleClientError(err error) error {
 	return fmt.Errorf(`Failed to create GitHub API client: %w
 
 💡 **Authentication Required**:
-  GitHub CLI must be installed and authenticated for gh-search to work.
+  GitHub CLI must be installed and authenticated for gh-code-search to work.
 
 🔧 **Setup Steps**:
   1. Install GitHub CLI: https://cli.github.com/
@@ -248,7 +248,7 @@ func handleClientError(err error) error {
      gh auth status
 
   4. Test the connection:
-     gh search "test query" --limit 1
+     gh code-search "test query" --limit 1
 
 📈 **Why Authentication?**:
   • Higher rate limits (5,000 vs 60 requests/hour)
@@ -256,7 +256,109 @@ func handleClientError(err error) error {
   • Better error handling and diagnostics
 
 🚀 **After Setup**:
-  gh search "your search terms here"`, err)
+  gh code-search "your search terms here"`, err)
+}
+
+// handleBatchError provides enhanced error handling for batch operations
+func handleBatchError(err error, searchIndex, totalSearches int) error {
+	if err == nil {
+		return nil
+	}
+
+	errMsg := strings.ToLower(err.Error())
+
+	// Rate limiting during batch operations
+	if rateLimitErr, ok := err.(*github.RateLimitError); ok {
+		resetTime := formatDuration(rateLimitErr.ResetTime)
+		progress := fmt.Sprintf("(%d/%d searches completed)", searchIndex-1, totalSearches)
+		
+		return fmt.Errorf(`Batch operation rate limit exceeded %s: %w
+
+💡 **Batch Operation Guidance**:
+  • Your batch was interrupted after %d searches
+  • Wait %s for automatic reset
+  • Consider breaking large batches into smaller chunks
+
+🔧 **Resume Strategy**:
+  • Create a new batch config with remaining searches
+  • Add delays between searches in YAML config
+  • Use lower max_results per search (e.g., 25 instead of 100)
+
+📊 **Rate Limit Status**:
+  • Limit: %d searches per hour  
+  • Remaining: %d
+  • Reset: %s
+
+🚀 **Optimized Batch Config Example**:
+  searches:
+    - name: "search1"
+      query: "your query"
+      max_results: 25
+      filters:
+        language: "typescript"`, progress, err, searchIndex-1, resetTime, rateLimitErr.Limit, rateLimitErr.Remaining, resetTime)
+	}
+
+	// Abuse rate limiting during batch operations
+	if abuseErr, ok := err.(*github.AbuseRateLimitError); ok {
+		retryAfter := "5-10 minutes"
+		if abuseErr.RetryAfter != nil {
+			retryAfter = formatDuration(*abuseErr.RetryAfter)
+		}
+		progress := fmt.Sprintf("(%d/%d searches completed)", searchIndex-1, totalSearches)
+		
+		return fmt.Errorf(`Batch operation abuse detection triggered %s: %w
+
+💡 **What Happened**:
+  • Your batch searches triggered GitHub's protective measures
+  • This happens when making requests too rapidly
+  • The system automatically adds delays, but you hit the threshold
+
+⏰ **Recovery Strategy**:
+  • Wait %s before retrying batch operations
+  • The rate limiter will automatically handle delays
+  • Consider smaller batch sizes (max 5-10 searches)
+
+🔧 **Prevention for Future Batches**:
+  • Use more specific filters to reduce API load
+  • Implement delays in your batch config
+  • Monitor rate limits: gh code-search rate-limit
+
+🚀 **Smaller Batch Example**:
+  name: "Optimized Batch"
+  searches: [max 5-7 searches]
+  output:
+    compare: true`, progress, err, retryAfter)
+	}
+
+	// Server errors during batch operations
+	if strings.Contains(errMsg, "500") || strings.Contains(errMsg, "502") || 
+	   strings.Contains(errMsg, "503") || strings.Contains(errMsg, "504") {
+		progress := fmt.Sprintf("(%d/%d searches completed)", searchIndex-1, totalSearches)
+		
+		return fmt.Errorf(`GitHub server error during batch operation %s: %w
+
+💡 **Server Issue Detected**:
+  • This is a temporary GitHub server problem
+  • Your batch progress has been saved
+  • The rate limiter automatically retried the failed request
+
+🔧 **Recovery Options**:
+  • Check GitHub status: https://status.github.com
+  • Retry the batch operation in a few minutes
+  • Consider smaller batch sizes during server issues
+
+⚡ **Performance Tips**:
+  • Monitor batch operations with --verbose
+  • Use --dry-run to validate before running
+  • Server issues are more common during peak hours
+
+🚀 **Resume Batch**:
+  gh code-search batch your-config.yaml --verbose`, progress, err)
+	}
+
+	// Generic batch error with context
+	progress := fmt.Sprintf("(%d/%d searches completed)", searchIndex-1, totalSearches)
+	return fmt.Errorf("batch operation failed %s: %w", progress, err)
 }
 
 // Helper functions for formatting
@@ -338,23 +440,23 @@ func suggestRetryStrategy(err error) string {
 // formatQuerySuggestion creates helpful query suggestions
 func formatQuerySuggestion(originalQuery string) []string {
 	suggestions := []string{
-		fmt.Sprintf(`gh search "%s" --limit 5`, originalQuery),
-		fmt.Sprintf(`gh search "%s" --language javascript`, originalQuery),
-		fmt.Sprintf(`gh search "%s" --repo facebook/react`, originalQuery),
+		fmt.Sprintf(`gh code-search "%s" --limit 5`, originalQuery),
+		fmt.Sprintf(`gh code-search "%s" --language javascript`, originalQuery),
+		fmt.Sprintf(`gh code-search "%s" --repo facebook/react`, originalQuery),
 	}
 	
 	// Add specific suggestions based on query content
 	if strings.Contains(strings.ToLower(originalQuery), "config") {
 		suggestions = append(suggestions, 
-			`gh search "config" --filename package.json`,
-			`gh search "tsconfig" --language json`,
+			`gh code-search "config" --filename package.json`,
+			`gh code-search "tsconfig" --language json`,
 		)
 	}
 	
 	if strings.Contains(strings.ToLower(originalQuery), "react") {
 		suggestions = append(suggestions,
-			`gh search "react" --language typescript --extension tsx`,
-			`gh search "useState" --repo facebook/react`,
+			`gh code-search "react" --language typescript --extension tsx`,
+			`gh code-search "useState" --repo facebook/react`,
 		)
 	}
 	

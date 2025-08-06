@@ -1,4 +1,4 @@
-# gh-search
+# gh-code-search
 
 Search GitHub code from the command line. Inspired by [ghx](https://github.com/johnlindquist/ghx).
 
@@ -7,7 +7,7 @@ Search GitHub code from the command line. Inspired by [ghx](https://github.com/j
 ## Installation
 
 ```bash
-gh extension install silouanwright/gh-search
+gh extension install silouanwright/gh-code-search
 ```
 
 Requires [GitHub CLI](https://cli.github.com/) (`gh auth login` to authenticate).
@@ -18,57 +18,57 @@ Requires [GitHub CLI](https://cli.github.com/) (`gh auth login` to authenticate)
 
 ```bash
 # Find TypeScript configuration files
-gh search "tsconfig.json" --language json --limit 10
+gh code-search "tsconfig.json" --language json --limit 10
 
 # Search for React hooks usage
-gh search "useState" --language typescript --extension tsx
+gh code-search "useState" --language typescript --extension tsx
 
 # Find Docker configurations in popular repositories
-gh search "dockerfile" --min-stars 1000 --limit 5
+gh code-search "dockerfile" --min-stars 1000 --limit 5
 ```
 
 ### Advanced Filtering & Pagination
 
 ```bash
 # Search specific repositories
-gh search "vite.config" --repo vercel/next.js --repo facebook/react
+gh code-search "vite.config" --repo vercel/next.js --repo facebook/react
 
 # Filter by file location and size
-gh search "component" --path "src/components" --size ">1000"
+gh code-search "component" --path "src/components" --size ">1000"
 
 # Search by organization/owner (multiple supported)
-gh search "interface" --owner microsoft --owner google --language typescript
+gh code-search "interface" --owner microsoft --owner google --language typescript
 
 # Page-based search (API efficient for large datasets)
-gh search "config" --page 1 --limit 100        # Get first 100 results
-gh search "config" --page 2 --limit 100        # Get next 100 results  
-gh search "config" --page 3 --limit 50         # Get results 201-250
+gh code-search "config" --page 1 --limit 100        # Get first 100 results
+gh code-search "config" --page 2 --limit 100        # Get next 100 results  
+gh code-search "config" --page 3 --limit 50         # Get results 201-250
 ```
 
 ### Output Formats
 
 ```bash
 # Default rich output with syntax highlighting
-gh search "config" --language json
+gh code-search "config" --language json
 
 # Pipe-friendly output for scripting
-gh search "hooks" --language typescript --pipe
+gh code-search "hooks" --language typescript --pipe
 
 # Save results to file
-gh search "dockerfile" --format markdown > docker-examples.md
+gh code-search "dockerfile" --format markdown > docker-examples.md
 ```
 
 ### Save and Reuse Searches
 
 ```bash
 # Save a search for later use
-gh search "eslint.config" --language javascript --save eslint-configs
+gh code-search "eslint.config" --language javascript --save eslint-configs
 
 # List saved searches
-gh search saved list
+gh code-search saved list
 
 # Run a saved search
-gh search saved run eslint-configs
+gh code-search saved run eslint-configs
 ```
 
 ## 🎯 Common Use Cases
@@ -78,16 +78,16 @@ Perfect for finding working configuration examples:
 
 ```bash
 # TypeScript project setup
-gh search "tsconfig.json" --language json --min-stars 500
+gh code-search "tsconfig.json" --language json --min-stars 500
 
 # ESLint configurations  
-gh search "eslint.config" --language javascript --path "**/examples/**"
+gh code-search "eslint.config" --language javascript --path "**/examples/**"
 
 # Docker best practices
-gh search "dockerfile" --min-stars 1000 --repo "**/production"
+gh code-search "dockerfile" --min-stars 1000 --repo "**/production"
 
 # GitHub Actions workflows
-gh search "github/workflows" --filename "*.yml" --path ".github/workflows"
+gh code-search "github/workflows" --filename "*.yml" --path ".github/workflows"
 ```
 
 ### Organization-Wide Code Search
@@ -96,44 +96,44 @@ Perfect for exploring patterns across all repositories in an organization:
 
 ```bash
 # All TypeScript configs across Microsoft repos
-gh search "tsconfig.json" --owner microsoft --language json
+gh code-search "tsconfig.json" --owner microsoft --language json
 
 # React patterns from top organizations
-gh search "useEffect" --owner facebook --owner vercel --language typescript
+gh code-search "useEffect" --owner facebook --owner vercel --language typescript
 
 # Go best practices from Google's projects
-gh search "interface" --owner google --language go --min-stars 1000
+gh code-search "interface" --owner google --language go --min-stars 1000
 ```
 
 ### Learning from Popular Projects
 
 ```bash
 # Specific repository patterns
-gh search "useEffect" --repo facebook/react --repo vercel/next.js
+gh code-search "useEffect" --repo facebook/react --repo vercel/next.js
 
 # Go patterns from well-maintained projects
-gh search "interface" --language go --min-stars 5000 --limit 20
+gh code-search "interface" --language go --min-stars 5000 --limit 20
 
 # Python best practices across organizations
-gh search "class" --language python --owner google --owner microsoft
+gh code-search "class" --language python --owner google --owner microsoft
 ```
 
 ### API and Library Usage
 
 ```bash
 # Find API usage examples
-gh search "stripe.charges.create" --language javascript --min-stars 100
+gh code-search "stripe.charges.create" --language javascript --min-stars 100
 
 # Database patterns
-gh search "prisma" --language typescript --path "**/models/**"
+gh code-search "prisma" --language typescript --path "**/models/**"
 
 # Testing patterns
-gh search "test" --filename "*test*" --language go --min-stars 1000
+gh code-search "test" --filename "*test*" --language go --min-stars 1000
 ```
 
 ## ⚙️ Configuration
 
-Create `~/.gh-search.yaml` for custom defaults:
+Create `~/.gh-code-search.yaml` for custom defaults:
 
 ```yaml
 defaults:
@@ -165,21 +165,21 @@ github:
 
 ## 🔍 Search Syntax
 
-gh-search supports GitHub's powerful search syntax:
+gh-code-search supports GitHub's powerful search syntax:
 
 ```bash
 # Exact phrases
-gh search "exact phrase match"
+gh code-search "exact phrase match"
 
 # Boolean operators
-gh search "config AND typescript"
-gh search "docker NOT test"
+gh code-search "config AND typescript"
+gh code-search "docker NOT test"
 
 # Wildcards and patterns
-gh search "*.config.js" --language javascript
+gh code-search "*.config.js" --language javascript
 
 # GitHub qualifiers
-gh search "language:go filename:main.go stars:>100"
+gh code-search "language:go filename:main.go stars:>100"
 ```
 
 ## 📊 Command Reference
@@ -208,7 +208,7 @@ gh search "language:go filename:main.go stars:>100"
 
 ## 🏗️ Architecture
 
-gh-search follows professional CLI development patterns:
+gh-code-search follows professional CLI development patterns:
 
 - **Interface-Based Design**: Dependency injection for testability
 - **Comprehensive Testing**: 85%+ test coverage with table-driven tests
@@ -232,10 +232,10 @@ gh auth refresh --scopes repo
 ### Rate Limiting
 ```bash
 # Check current rate limits
-gh search --rate-limit
+gh code-search --rate-limit
 
 # Use more specific filters to reduce API calls
-gh search "config" --repo specific/repo --language json
+gh code-search "config" --repo specific/repo --language json
 ```
 
 ### No Results Found
@@ -248,10 +248,10 @@ gh search "config" --repo specific/repo --language json
 
 ### Building from Source
 ```bash
-git clone https://github.com/silouanwright/gh-search.git
-cd gh-search
+git clone https://github.com/silouanwright/gh-code-search.git
+cd gh-code-search
 go mod tidy
-go build -o gh-search
+go build -o gh-code-search
 ```
 
 ### Running Tests
@@ -266,7 +266,7 @@ go tool cover -html=coverage.out
 
 ### Project Structure
 ```
-gh-search/
+gh-code-search/
 ├── cmd/                    # CLI commands
 ├── internal/
 │   ├── github/            # GitHub API client
@@ -289,8 +289,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/silouanwright/gh-search)
-- [Issues & Bug Reports](https://github.com/silouanwright/gh-search/issues)
+- [GitHub Repository](https://github.com/silouanwright/gh-code-search)
+- [Issues & Bug Reports](https://github.com/silouanwright/gh-code-search/issues)
 - [Contributing Guidelines](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 

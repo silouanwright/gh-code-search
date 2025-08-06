@@ -1,7 +1,7 @@
-# gh-search Migration Guide
+# gh-code-search Migration Guide
 
 **From**: ghx TypeScript monolith  
-**To**: gh-search Go CLI extension with gh-comment's proven patterns  
+**To**: gh-code-search Go CLI extension with gh-comment's proven patterns  
 **Goal**: Professional-grade GitHub search with 85%+ test coverage  
 
 ## 🔄 **Migration Overview**
@@ -13,7 +13,7 @@
 - **Distribution**: npm package with global install
 - **Features**: GitHub code search with basic filtering
 
-### **Target State: gh-search (Go)**
+### **Target State: gh-code-search (Go)**
 - **Architecture**: Modular Go CLI with dependency injection
 - **Dependencies**: Minimal (cobra, github.com/google/go-github)
 - **Testing**: Comprehensive with 85%+ coverage, table-driven tests
@@ -27,9 +27,9 @@
 #### **1.1 Initialize Go Project**
 ```bash
 # Create new repository
-mkdir gh-search
-cd gh-search
-go mod init github.com/silouanwright/gh-search
+mkdir gh-code-search
+cd gh-code-search
+go mod init github.com/silouanwright/gh-code-search
 
 # Set up basic structure
 mkdir -p cmd internal/{github,search,config,output} test docs examples
@@ -38,7 +38,7 @@ mkdir -p cmd internal/{github,search,config,output} test docs examples
 #### **1.2 Core Dependencies**
 ```go
 // go.mod
-module github.com/silouanwright/gh-search
+module github.com/silouanwright/gh-code-search
 
 go 1.21
 
@@ -91,7 +91,7 @@ type SearchItem struct {
 ```go
 // cmd/root.go
 var rootCmd = &cobra.Command{
-    Use:   "gh-search",
+    Use:   "gh-code-search",
     Short: "GitHub code search with intelligent filtering and analysis",
     Long: `Search GitHub's vast codebase to find working examples and configurations.
     
@@ -523,10 +523,10 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
-    // Load from ~/.gh-search.yaml or .gh-search.yaml
+    // Load from ~/.gh-code-search.yaml or .gh-code-search.yaml
     configPaths := []string{
-        ".gh-search.yaml",
-        filepath.Join(os.Getenv("HOME"), ".gh-search.yaml"),
+        ".gh-code-search.yaml",
+        filepath.Join(os.Getenv("HOME"), ".gh-code-search.yaml"),
     }
     
     for _, path := range configPaths {
@@ -553,18 +553,18 @@ func handleSearchError(err error, query string) error {
         return fmt.Errorf(`GitHub search rate limit exceeded: %w
 
 💡 **Solutions**:
-  • Wait for rate limit reset (check: gh search --rate-limit)
+  • Wait for rate limit reset (check: gh code-search --rate-limit)
   • Use more specific search terms: --language, --repo, --filename
   • Search specific repositories: --repo owner/repo
-  • Use saved searches: gh search saved list
+  • Use saved searches: gh code-search saved list
 
 📊 **Current Limits**:
   • Authenticated: 30 searches/minute
   • Unauthenticated: 10 searches/minute
 
 🔧 **Try These Alternatives**:
-  gh search "config" --repo facebook/react --language json
-  gh search saved run popular-configs`, err)
+  gh code-search "config" --repo facebook/react --language json
+  gh code-search saved run popular-configs`, err)
     }
     
     // More intelligent error handling...
@@ -615,15 +615,15 @@ func TestMigratedGhxFunctionality(t *testing.T) {
 
 ### **Feature Parity Verification**
 ```bash
-# Verify all ghx functionality works in gh-search
-gh search "tsconfig.json" --filename tsconfig.json --limit 2
-gh search "useState" --language typescript --extension tsx --limit 1  
-gh search "useState" --repo facebook/react --limit 1
-gh search "hooks" --language typescript --repo facebook/react --limit 1
-gh search "dependencies" --filename package.json --limit 1
-gh search "class" --size ">1000" --language typescript --limit 1
-gh search "Button" --path src/components --extension tsx --limit 1
-gh search "interface" --context 50 --language typescript --limit 1
+# Verify all ghx functionality works in gh-code-search
+gh code-search "tsconfig.json" --filename tsconfig.json --limit 2
+gh code-search "useState" --language typescript --extension tsx --limit 1  
+gh code-search "useState" --repo facebook/react --limit 1
+gh code-search "hooks" --language typescript --repo facebook/react --limit 1
+gh code-search "dependencies" --filename package.json --limit 1
+gh code-search "class" --size ">1000" --language typescript --limit 1
+gh code-search "Button" --path src/components --extension tsx --limit 1
+gh code-search "interface" --context 50 --language typescript --limit 1
 ```
 
 ### **Quality Gates**

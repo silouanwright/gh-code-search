@@ -8,14 +8,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/silouanwright/gh-search/internal/github"
-	"github.com/silouanwright/gh-search/internal/search"
+	"github.com/silouanwright/gh-code-search/internal/github"
+	"github.com/silouanwright/gh-code-search/internal/search"
 	"github.com/spf13/cobra"
 )
 
 var (
 	// Global client for dependency injection (following gh-comment pattern)
 	searchClient github.GitHubAPI
+	// Rate limiter for search operations
+	searchRateLimiter *github.RateLimiter
 
 	// Search flags migrated from ghx
 	searchLanguage  string
@@ -35,6 +37,12 @@ var (
 	minStars        int
 	sort            string
 	order           string
+
+	// Batch search flags (Phase 2)
+	batchRepos      []string // --repos flag for multiple repositories
+	batchOrgs       []string // --orgs flag for multiple organizations
+	aggregateMode   bool     // --aggregate flag
+	compareMode     bool     // --compare flag
 )
 
 // searchCmd represents the search command
@@ -49,29 +57,34 @@ and best practices across millions of repositories.
 Results include code context, repository information, and intelligent
 ranking based on repository quality indicators.`,
 	Example: `  # Configuration discovery workflows
-  gh search "tsconfig.json" --language json --limit 10
-  gh search "vite.config" --language javascript --context 30
-  gh search "dockerfile" --filename dockerfile --repo "**/react"
+  gh code-search "tsconfig.json" --language json --limit 10
+  gh code-search "vite.config" --language javascript --context 30
+  gh code-search "dockerfile" --filename dockerfile --repo "**/react"
   
   # Page-based search (API efficient for large datasets)
-  gh search "config" --page 1 --limit 100        # Get first 100 results
-  gh search "config" --page 2 --limit 100        # Get next 100 results
-  gh search "config" --page 3 --limit 50         # Get results 201-250
+  gh code-search "config" --page 1 --limit 100        # Get first 100 results
+  gh code-search "config" --page 2 --limit 100        # Get next 100 results
+  gh code-search "config" --page 3 --limit 50         # Get results 201-250
   
   # Organization/owner-specific searches
-  gh search "eslint.config.js" --owner microsoft --language javascript
-  gh search "next.config.js" --owner vercel --page 1 --limit 50
-  gh search "interface" --owner google --owner facebook --language typescript
+  gh code-search "eslint.config.js" --owner microsoft --language javascript
+  gh code-search "next.config.js" --owner vercel --page 1 --limit 50
+  gh code-search "interface" --owner google --owner facebook --language typescript
+  
+  # Multi-repository batch searches (Phase 2)
+  gh code-search "docker-compose.yml" --repos microsoft/vscode,facebook/react,vercel/next.js --aggregate
+  gh code-search "tsconfig.json" --orgs microsoft,google,facebook --min-stars 500 --compare
+  gh code-search "webpack OR vite" --repos facebook/*,vercel/* --compare
   
   # Auto-pagination (less API efficient but convenient)
-  gh search "hooks" --limit 200                  # Automatically fetches 2 pages
+  gh code-search "hooks" --limit 200                  # Automatically fetches 2 pages
 
   # Export results to files
-  gh search "config" --language json --output configs.md     # Markdown export
-  gh search "hooks" --pipe --output data.txt                 # Pipe format export
+  gh code-search "config" --language json --output configs.md     # Markdown export
+  gh code-search "hooks" --pipe --output data.txt                 # Pipe format export
 
   # Pipe results for further processing
-  gh search "react hooks" --language typescript --pipe`,
+  gh code-search "react hooks" --language typescript --pipe`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runSearch,
 }
@@ -84,6 +97,11 @@ func runSearch(cmd *cobra.Command, args []string) error {
 			return handleClientError(err)
 		}
 		searchClient = client
+	}
+
+	// Check if batch flags are used (Phase 2 functionality)
+	if len(batchRepos) > 0 || len(batchOrgs) > 0 {
+		return executeBatchRepoSearch(cmd.Context(), args)
 	}
 
 	// Build search query from args and flags (migrated from ghx)
@@ -200,6 +218,11 @@ func executeSinglePageSearch(ctx context.Context, query string) (*github.SearchR
 
 // executeAutoPageSearch automatically paginates for high limits (legacy behavior) 
 func executeAutoPageSearch(ctx context.Context, query string) (*github.SearchResults, error) {
+	// Initialize rate limiter if not set
+	if searchRateLimiter == nil {
+		searchRateLimiter = github.NewRateLimiter()
+	}
+
 	var allResults *github.SearchResults
 	page := 1
 	remaining := searchLimit
@@ -220,7 +243,13 @@ func executeAutoPageSearch(ctx context.Context, query string) (*github.SearchRes
 			},
 		}
 
-		results, err := searchClient.SearchCode(ctx, query, opts)
+		// Execute search with rate limiting and retry logic
+		var results *github.SearchResults
+		err := searchRateLimiter.WithRetry(ctx, fmt.Sprintf("search page %d", page), func() error {
+			var searchErr error
+			results, searchErr = searchClient.SearchCode(ctx, query, opts)
+			return searchErr
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -240,6 +269,26 @@ func executeAutoPageSearch(ctx context.Context, query string) (*github.SearchRes
 
 		remaining -= len(results.Items)
 		page++
+
+		// Add intelligent delay between paginated calls (except after last page)
+		if remaining > 0 && len(results.Items) == perPage {
+			// Estimate complexity based on current pagination
+			complexity := github.MediumComplexity
+			if page > 10 { // High pagination suggests complex query
+				complexity = github.HighComplexity
+			} else if page <= 3 {
+				complexity = github.LowComplexity
+			}
+
+			if verbose {
+				fmt.Printf("  Adding delay between pages (complexity: %v)...\n", complexity)
+			}
+
+			err := searchRateLimiter.IntelligentDelay(ctx, complexity)
+			if err != nil {
+				return nil, fmt.Errorf("operation cancelled during pagination delay: %w", err)
+			}
+		}
 	}
 
 	return allResults, nil
@@ -420,6 +469,12 @@ func init() {
 	searchCmd.Flags().StringVar(&outputFile, "output", "", "export results to file (e.g., results.md, data.json)")
 	searchCmd.Flags().BoolVarP(&pipe, "pipe", "", false, "output to stdout (for piping to other tools)")
 
+	// Batch search flags (Phase 2)
+	searchCmd.Flags().StringSliceVar(&batchRepos, "repos", nil, "search across multiple repositories (comma-separated)")
+	searchCmd.Flags().StringSliceVar(&batchOrgs, "orgs", nil, "search across multiple organizations (comma-separated)")
+	searchCmd.Flags().BoolVar(&aggregateMode, "aggregate", false, "aggregate results from multiple repositories")
+	searchCmd.Flags().BoolVar(&compareMode, "compare", false, "enable comparison mode for multi-repository results")
+
 	// Workflow integration flags (new)
 	// TODO: Implement saved searches functionality
 	// searchCmd.Flags().StringVar(&saveAs, "save", "", "save search with given name")
@@ -430,6 +485,8 @@ func init() {
 	searchCmd.Flags().SetAnnotation("filename", "examples", []string{"package.json", "tsconfig.json", "Dockerfile"})
 	searchCmd.Flags().SetAnnotation("extension", "examples", []string{"ts", "go", "py", "js"})
 	searchCmd.Flags().SetAnnotation("size", "examples", []string{">1000", "<500", "100..200"})
+	searchCmd.Flags().SetAnnotation("repos", "examples", []string{"microsoft/vscode,facebook/react", "vercel/*,netlify/*"})
+	searchCmd.Flags().SetAnnotation("orgs", "examples", []string{"microsoft,google,facebook", "vercel,netlify"})
 }
 
 // formatJSONResults formats search results as JSON
@@ -508,4 +565,179 @@ func formatCompactResults(results *github.SearchResults) (string, error) {
 	}
 	
 	return builder.String(), nil
+}
+
+// executeBatchRepoSearch handles multi-repository search with aggregation (Phase 2)
+func executeBatchRepoSearch(ctx context.Context, args []string) error {
+	query := strings.Join(args, " ")
+	
+	if dryRun {
+		fmt.Printf("Would execute batch search: %s\n", query)
+		if len(batchRepos) > 0 {
+			fmt.Printf("Repositories: %s\n", strings.Join(batchRepos, ", "))
+		}
+		if len(batchOrgs) > 0 {
+			fmt.Printf("Organizations: %s\n", strings.Join(batchOrgs, ", "))
+		}
+		return nil
+	}
+
+	// Collect all target repositories
+	var targetRepos []string
+	
+	// Add explicit repos
+	targetRepos = append(targetRepos, batchRepos...)
+	
+	// Add repos from organizations (simplified - in real implementation would use GitHub API)
+	for _, org := range batchOrgs {
+		if strings.Contains(org, "*") {
+			// Handle wildcard patterns
+			targetRepos = append(targetRepos, org+"/*")
+		} else {
+			// For now, treat as repo pattern
+			targetRepos = append(targetRepos, org+"/*")
+		}
+	}
+
+	if verbose {
+		fmt.Printf("Executing batch search across %d repository patterns\n", len(targetRepos))
+		fmt.Printf("Query: %s\n", query)
+	}
+
+	// Execute searches across all repositories
+	var allResults *github.SearchResults
+	totalResults := 0
+
+	for i, repoPattern := range targetRepos {
+		if verbose {
+			fmt.Printf("Searching %d/%d: %s\n", i+1, len(targetRepos), repoPattern)
+		}
+
+		// Build query with repository filter (commented out - using QueryBuilder instead)
+		
+		// Apply other filters
+		qb := search.NewQueryBuilder([]string{query})
+		if searchLanguage != "" {
+			qb = qb.WithLanguage(searchLanguage)
+		}
+		if searchFilename != "" {
+			qb = qb.WithFilename(searchFilename)
+		}
+		if searchExtension != "" {
+			qb = qb.WithExtension(searchExtension)
+		}
+		if searchPath != "" {
+			qb = qb.WithPath(searchPath)
+		}
+		if searchSize != "" {
+			qb = qb.WithSize(searchSize)
+		}
+		if minStars > 0 {
+			qb = qb.WithMinStars(minStars)
+		}
+		
+		// Add repository filter
+		qb = qb.WithRepositories([]string{repoPattern})
+		finalQuery := qb.Build()
+
+		// Execute single repository search
+		opts := &github.SearchOptions{
+			Sort:  sort,
+			Order: order,
+			ListOptions: github.ListOptions{
+				Page:    1,
+				PerPage: searchLimit,
+			},
+		}
+
+		results, err := searchClient.SearchCode(ctx, finalQuery, opts)
+		if err != nil {
+			if verbose {
+				fmt.Printf("  Warning: Search failed for %s: %v\n", repoPattern, err)
+			}
+			continue
+		}
+
+		if verbose {
+			fmt.Printf("  Found %d results\n", len(results.Items))
+		}
+
+		// Aggregate results
+		if allResults == nil {
+			allResults = results
+		} else {
+			allResults.Items = append(allResults.Items, results.Items...)
+			if results.Total != nil {
+				if allResults.Total == nil {
+					allResults.Total = github.IntPtr(0)
+				}
+				*allResults.Total += *results.Total
+			}
+		}
+
+		totalResults += len(results.Items)
+	}
+
+	if allResults == nil {
+		fmt.Println("No results found across any repositories.")
+		return nil
+	}
+
+	if verbose {
+		fmt.Printf("Batch search completed: %d total results from %d repositories\n", totalResults, len(targetRepos))
+	}
+
+	// Handle comparison mode
+	if compareMode {
+		return outputBatchComparison(allResults, targetRepos)
+	}
+
+	// Handle aggregate mode or default output
+	return outputResults(allResults)
+}
+
+// outputBatchComparison outputs results in comparison format
+func outputBatchComparison(results *github.SearchResults, repos []string) error {
+	fmt.Printf("# Multi-Repository Search Comparison\n\n")
+	fmt.Printf("**Query executed across %d repository patterns**\n", len(repos))
+	fmt.Printf("**Total results found: %d**\n\n", len(results.Items))
+
+	// Group results by repository
+	repoResults := make(map[string][]github.SearchItem)
+	for _, item := range results.Items {
+		if item.Repository.FullName != nil {
+			repoName := *item.Repository.FullName
+			repoResults[repoName] = append(repoResults[repoName], item)
+		}
+	}
+
+	fmt.Printf("## Results by Repository\n\n")
+	for repo, items := range repoResults {
+		fmt.Printf("### %s (%d results)\n", repo, len(items))
+		
+		// Show top 3 results per repository
+		maxShow := 3
+		if len(items) < maxShow {
+			maxShow = len(items)
+		}
+		
+		for i := 0; i < maxShow; i++ {
+			item := items[i]
+			if item.Path != nil && item.HTMLURL != nil {
+				fmt.Printf("- **%s** - [View](%s)\n", *item.Path, *item.HTMLURL)
+			}
+		}
+		
+		if len(items) > maxShow {
+			fmt.Printf("- ... and %d more results\n", len(items)-maxShow)
+		}
+		fmt.Println()
+	}
+
+	// Simple pattern analysis
+	fmt.Printf("## Analysis\n")
+	fmt.Printf("- **Repositories with results**: %d\n", len(repoResults))
+	fmt.Printf("- **Average results per repository**: %.1f\n", float64(len(results.Items))/float64(len(repoResults)))
+	
+	return nil
 }

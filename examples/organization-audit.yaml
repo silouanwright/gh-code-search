@@ -1,0 +1,46 @@
+name: "Organization Security Configuration Audit"
+description: "Audit security configurations and best practices across organization repositories"
+output:
+  format: "separate"
+  directory: "security-audit"
+  compare: true
+
+searches:
+  - name: "security-policies"
+    query: "SECURITY.md"
+    filters:
+      filename: "SECURITY.md"
+      owner: ["microsoft", "google", "facebook"]
+      min_stars: 500
+    max_results: 30
+    tags: ["security", "policy", "documentation"]
+
+  - name: "dependabot-configs"
+    query: "dependabot.yml"
+    filters:
+      filename: "dependabot.yml"
+      path: ".github"
+      owner: ["microsoft", "google", "facebook"]
+      min_stars: 100
+    max_results: 40
+    tags: ["security", "dependencies", "automation"]
+
+  - name: "github-workflows"
+    query: "workflow security"
+    filters:
+      extension: "yml"
+      path: ".github/workflows"
+      owner: ["microsoft", "google", "facebook"]
+      min_stars: 200
+    max_results: 35
+    tags: ["security", "ci-cd", "workflows"]
+
+  - name: "codeql-configs"
+    query: "codeql"
+    filters:
+      filename: "codeql-analysis.yml"
+      path: ".github/workflows"
+      owner: ["microsoft", "google", "facebook"]
+      min_stars: 100
+    max_results: 25
+    tags: ["security", "static-analysis", "codeql"]

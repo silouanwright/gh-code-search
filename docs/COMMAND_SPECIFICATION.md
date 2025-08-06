@@ -1,4 +1,4 @@
-# gh-search Command Specification
+# gh-code-search Command Specification
 
 **Based on**: gh-comment's command patterns and UX excellence  
 **Goal**: Intuitive, powerful GitHub code search with professional workflows  
@@ -21,27 +21,27 @@
 
 ## 🏗️ **Command Structure**
 
-### **Root Command: `gh search`**
+### **Root Command: `gh code-search`**
 ```bash
-gh search <query> [flags]                    # Main search interface
+gh code-search <query> [flags]                    # Main search interface
 ```
 
 **Philosophy**: Single entry point with powerful filtering, following `gh pr`, `gh issue` patterns
 
 ### **Subcommands for Advanced Features**
 ```bash
-gh search patterns <query> [flags]          # Analyze configuration patterns
-gh search saved <command> [args]            # Manage saved searches  
-gh search template <query> [flags]          # Generate templates from patterns
-gh search compare <file1> <file2>           # Compare configurations side-by-side
+gh code-search patterns <query> [flags]          # Analyze configuration patterns
+gh code-search saved <command> [args]            # Manage saved searches  
+gh code-search template <query> [flags]          # Generate templates from patterns
+gh code-search compare <file1> <file2>           # Compare configurations side-by-side
 ```
 
 ## 📋 **Detailed Command Specifications**
 
-### **1. Main Search Command: `gh search`**
+### **1. Main Search Command: `gh code-search`**
 
 ```bash
-Usage: gh search <query> [flags]
+Usage: gh code-search <query> [flags]
 
 Description:
   Search GitHub's codebase to discover working examples and configurations.
@@ -51,17 +51,17 @@ Description:
 
 Examples:
   # Configuration discovery workflows
-  gh search "tsconfig.json" --language json --limit 10
-  gh search "vite.config" --language javascript --context 30
-  gh search "dockerfile" --filename dockerfile --repo "**/react"
+  gh code-search "tsconfig.json" --language json --limit 10
+  gh code-search "vite.config" --language javascript --context 30
+  gh code-search "dockerfile" --filename dockerfile --repo "**/react"
   
   # Pattern research with AI integration  
-  gh search "eslint.config.js" --language javascript --save eslint-research
-  gh search "next.config.js" --repo vercel/next.js --context 50
+  gh code-search "eslint.config.js" --language javascript --save eslint-research
+  gh code-search "next.config.js" --repo vercel/next.js --context 50
   
   # Advanced filtering for quality results
-  gh search "tailwind.config" --min-stars 1000 --language javascript
-  gh search "package.json" --path "examples/" --limit 20
+  gh code-search "tailwind.config" --min-stars 1000 --language javascript
+  gh code-search "package.json" --path "examples/" --limit 20
 
 Arguments:
   query                 Search terms (required)
@@ -106,22 +106,22 @@ Exit Codes:
 #### **Search Query Intelligence**
 ```bash
 # Smart query building (like gh-comment's intelligent parsing)
-gh search "config typescript"              # → "config typescript"
-gh search config --language typescript     # → "config language:typescript"  
-gh search --filename "*.config.js"         # → "filename:*.config.js"
-gh search react --repo facebook/react      # → "react repo:facebook/react"
+gh code-search "config typescript"              # → "config typescript"
+gh code-search config --language typescript     # → "config language:typescript"  
+gh code-search --filename "*.config.js"         # → "filename:*.config.js"
+gh code-search react --repo facebook/react      # → "react repo:facebook/react"
 
 # Advanced GitHub search syntax support
-gh search "exact phrase match"             # → "exact phrase match"
-gh search "config AND typescript"          # → "config AND typescript"  
-gh search "config NOT test"                # → "config NOT test"
-gh search "extension:js OR extension:ts"   # → "extension:js OR extension:ts"
+gh code-search "exact phrase match"             # → "exact phrase match"
+gh code-search "config AND typescript"          # → "config AND typescript"  
+gh code-search "config NOT test"                # → "config NOT test"
+gh code-search "extension:js OR extension:ts"   # → "extension:js OR extension:ts"
 ```
 
-### **2. Pattern Analysis: `gh search patterns`**
+### **2. Pattern Analysis: `gh code-search patterns`**
 
 ```bash
-Usage: gh search patterns <query> [flags]
+Usage: gh code-search patterns <query> [flags]
 
 Description:
   Analyze common configuration patterns across search results.
@@ -131,13 +131,13 @@ Description:
 
 Examples:
   # Analyze TypeScript config patterns
-  gh search patterns "tsconfig.json" --language json --min-pattern-count 3
+  gh code-search patterns "tsconfig.json" --language json --min-pattern-count 3
   
   # Find common ESLint configurations
-  gh search patterns "eslint.config" --language javascript --group-by property
+  gh code-search patterns "eslint.config" --language javascript --group-by property
   
   # Analyze Docker patterns with ranking
-  gh search patterns "dockerfile" --rank-by frequency --show-examples 5
+  gh code-search patterns "dockerfile" --rank-by frequency --show-examples 5
 
 Flags:
   # Pattern Detection
@@ -157,10 +157,10 @@ Flags:
   --limit int                   Results to analyze (default: 100)
 ```
 
-### **3. Saved Searches: `gh search saved`**
+### **3. Saved Searches: `gh code-search saved`**
 
 ```bash
-Usage: gh search saved <command> [args]
+Usage: gh code-search saved <command> [args]
 
 Description:
   Manage saved searches for repeated configuration research workflows.
@@ -176,21 +176,21 @@ Commands:
 
 Examples:
   # Save common research queries
-  gh search saved save "react-configs" "tsconfig.json" --repo "*react*" --language json
-  gh search saved save "docker-examples" "dockerfile" --min-stars 100
+  gh code-search saved save "react-configs" "tsconfig.json" --repo "*react*" --language json
+  gh code-search saved save "docker-examples" "dockerfile" --min-stars 100
   
   # Use saved searches  
-  gh search saved run react-configs
-  gh search saved run docker-examples --limit 20  # Override saved limit
+  gh code-search saved run react-configs
+  gh code-search saved run docker-examples --limit 20  # Override saved limit
   
   # Manage saved searches
-  gh search saved list
-  gh search saved edit react-configs  
-  gh search saved delete old-search
+  gh code-search saved list
+  gh code-search saved edit react-configs  
+  gh code-search saved delete old-search
   
   # Team sharing
-  gh search saved export team-searches.yaml
-  gh search saved import team-searches.yaml
+  gh code-search saved export team-searches.yaml
+  gh code-search saved import team-searches.yaml
 
 Saved Search Format:
   name: react-configs
@@ -205,10 +205,10 @@ Saved Search Format:
   use_count: 15
 ```
 
-### **4. Template Generation: `gh search template`**
+### **4. Template Generation: `gh code-search template`**
 
 ```bash
-Usage: gh search template <query> [flags]
+Usage: gh code-search template <query> [flags]
 
 Description:
   Generate configuration templates by analyzing common patterns across
@@ -216,13 +216,13 @@ Description:
 
 Examples:
   # Generate TypeScript config template
-  gh search template "tsconfig.json" --language json --output tsconfig.template.json
+  gh code-search template "tsconfig.json" --language json --output tsconfig.template.json
   
   # Create Docker template from popular examples
-  gh search template "dockerfile" --min-stars 1000 --output Dockerfile.template
+  gh code-search template "dockerfile" --min-stars 1000 --output Dockerfile.template
   
   # Generate with pattern analysis
-  gh search template "vite.config" --analyze-patterns --merge-common --output vite.config.template.js
+  gh code-search template "vite.config" --analyze-patterns --merge-common --output vite.config.template.js
 
 Flags:
   # Template Generation
@@ -241,10 +241,10 @@ Flags:
   --format string               Force output format: json, yaml, javascript, etc.
 ```
 
-### **5. Configuration Comparison: `gh search compare`**
+### **5. Configuration Comparison: `gh code-search compare`**
 
 ```bash
-Usage: gh search compare <file1> <file2> [flags]
+Usage: gh code-search compare <file1> <file2> [flags]
 
 Description:
   Compare two configuration files side-by-side, highlighting differences
@@ -252,13 +252,13 @@ Description:
 
 Examples:
   # Compare local configs  
-  gh search compare tsconfig.json ../other-project/tsconfig.json
+  gh code-search compare tsconfig.json ../other-project/tsconfig.json
   
   # Compare with GitHub examples
-  gh search compare package.json --github facebook/react:package.json
+  gh code-search compare package.json --github facebook/react:package.json
   
   # Find similar configs for comparison context
-  gh search compare vite.config.js --find-similar --language javascript
+  gh code-search compare vite.config.js --find-similar --language javascript
 
 Flags:
   # Comparison Mode
@@ -388,10 +388,10 @@ microsoft/vscode:tsconfig.json:https://github.com/microsoft/vscode/blob/main/tsc
    • Wait 12m 34s for automatic reset
    • Use more specific filters: --language, --repo, --filename
    • Search specific repositories: --repo facebook/react
-   • Use saved searches: gh search saved list
+   • Use saved searches: gh code-search saved list
 
-📊 Check current status: gh search --rate-limit
-⚡ Try this instead: gh search "config" --repo facebook/react --language json
+📊 Check current status: gh code-search --rate-limit
+⚡ Try this instead: gh code-search "config" --repo facebook/react --language json
 ```
 
 ### **Invalid Query Syntax**
@@ -410,12 +410,12 @@ microsoft/vscode:tsconfig.json:https://github.com/microsoft/vscode/blob/main/tsc
    • Qualifiers: language:typescript filename:config.json
 
 📖 Corrected examples:
-   gh search "config typescript"                    # phrase search
-   gh search config --language typescript          # using flags  
-   gh search "config AND typescript"               # boolean AND
-   gh search "typescript OR javascript"            # boolean OR
+   gh code-search "config typescript"                    # phrase search
+   gh code-search config --language typescript          # using flags  
+   gh code-search "config AND typescript"               # boolean AND
+   gh code-search "typescript OR javascript"            # boolean OR
    
-🚀 Try: gh search "config typescript" --language typescript
+🚀 Try: gh code-search "config typescript" --language typescript
 ```
 
 ### **No Results Found**
@@ -430,11 +430,11 @@ microsoft/vscode:tsconfig.json:https://github.com/microsoft/vscode/blob/main/tsc
    • Try related terms: "configuration", "setup", "options"
 
 🔍 Alternative searches:
-   gh search "config" --language javascript --limit 10
-   gh search "package.json" --path examples/ --limit 5
-   gh search --saved popular-configs  # if you have saved searches
+   gh code-search "config" --language javascript --limit 10
+   gh code-search "package.json" --path examples/ --limit 5
+   gh code-search --saved popular-configs  # if you have saved searches
 
-📖 Browse common patterns: gh search patterns --help
+📖 Browse common patterns: gh code-search patterns --help
 ```
 
 ### **Authentication Issues**
@@ -455,12 +455,12 @@ microsoft/vscode:tsconfig.json:https://github.com/microsoft/vscode/blob/main/tsc
    • Access to private repositories (if permissions allow)
    • Detailed repository metadata
 
-🚀 After authentication: gh search "your query here"
+🚀 After authentication: gh code-search "your query here"
 ```
 
 ## ⚙️ **Configuration System**
 
-### **Config File Format (.gh-search.yaml)**
+### **Config File Format (.gh-code-search.yaml)**
 ```yaml
 # Global defaults for all searches
 defaults:
@@ -504,7 +504,7 @@ analysis:
 output:
   color_mode: "auto"        # auto, always, never
   editor_command: "cursor"  # Command to open results
-  save_path: "~/gh-search-results"  # Where to save result files
+  save_path: "~/gh-code-search-results"  # Where to save result files
   show_patterns: true       # Show pattern analysis in results
   max_content_lines: 50     # Maximum lines of file content to show
 

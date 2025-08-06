@@ -5,29 +5,29 @@ import (
 	"os"
 	"strings"
 
-	"github.com/silouanwright/gh-search/internal/config"
+	"github.com/silouanwright/gh-code-search/internal/config"
 	"github.com/spf13/cobra"
 )
 
 // configCmd represents the config command
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Manage gh-search configuration",
-	Long: `Manage gh-search configuration settings.
+	Short: "Manage gh-code-search configuration",
+	Long: `Manage gh-code-search configuration settings.
 
 View, modify, and reset configuration values to customize
-gh-search behavior and preferences.`,
+gh-code-search behavior and preferences.`,
 	Example: `  # View current configuration
-  gh search config show
+  gh code-search config show
 
   # Reset editor preference
-  gh search config reset defaults.editor
+  gh code-search config reset defaults.editor
 
   # Reset all configuration to defaults  
-  gh search config reset --all
+  gh code-search config reset --all
 
   # Set default language
-  gh search config set defaults.language typescript`,
+  gh code-search config set defaults.language typescript`,
 }
 
 // configShowCmd shows current configuration
@@ -50,13 +50,13 @@ var configResetCmd = &cobra.Command{
 Use --all flag to reset all configuration, or specify a specific key
 to reset only that value.`,
 	Example: `  # Reset editor preference (fixes ghx issue #4)
-  gh search config reset defaults.editor
+  gh code-search config reset defaults.editor
 
   # Reset output format
-  gh search config reset defaults.output_format
+  gh code-search config reset defaults.output_format
 
   # Reset everything
-  gh search config reset --all`,
+  gh code-search config reset --all`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runConfigReset,
 }
@@ -70,13 +70,13 @@ var configSetCmd = &cobra.Command{
 Supported configuration keys include defaults.editor, defaults.language,
 defaults.max_results, and more.`,
 	Example: `  # Set default editor (addresses ghx issue #4)
-  gh search config set defaults.editor "code"
+  gh code-search config set defaults.editor "code"
 
   # Set default language
-  gh search config set defaults.language "typescript"
+  gh code-search config set defaults.language "typescript"
 
   # Set default result limit
-  gh search config set defaults.max_results 25`,
+  gh code-search config set defaults.max_results 25`,
 	Args: cobra.ExactArgs(2),
 	RunE: runConfigSet,
 }
@@ -91,7 +91,7 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	fmt.Println("🔧 Current gh-search configuration:")
+	fmt.Println("🔧 Current gh-code-search configuration:")
 	fmt.Println()
 
 	// Show defaults
@@ -138,17 +138,17 @@ func runConfigReset(cmd *cobra.Command, args []string) error {
 	if resetAll {
 		// Reset entire configuration by removing existing config files
 		configPaths := []string{
-			".gh-search.yaml",
-			".gh-search.yml",
+			".gh-code-search.yaml",
+			".gh-code-search.yml",
 		}
 		
 		// Also check user config directory
 		if homeDir, err := os.UserHomeDir(); err == nil {
 			configPaths = append(configPaths,
-				homeDir+"/.config/gh-search/gh-search.yaml",
-				homeDir+"/.config/gh-search/gh-search.yml",
-				homeDir+"/.gh-search.yaml",
-				homeDir+"/.gh-search.yml",
+				homeDir+"/.config/gh-code-search/gh-code-search.yaml",
+				homeDir+"/.config/gh-code-search/gh-code-search.yml",
+				homeDir+"/.gh-code-search.yaml",
+				homeDir+"/.gh-code-search.yml",
 			)
 		}
 		

@@ -1,0 +1,43 @@
+name: "React + TypeScript Configuration Analysis"
+description: "Compare configuration patterns across different tech stacks"
+output:
+  format: "comparison"
+  directory: "analysis-results"
+  compare: true
+
+searches:
+  - name: "vite-react-ts"
+    query: "vite.config"
+    filters:
+      language: "typescript"
+      filename: "vite.config.ts"
+      min_stars: 100
+    max_results: 50
+    tags: ["vite", "react", "typescript"]
+    
+  - name: "webpack-react-ts"
+    query: "webpack.config"
+    filters:
+      language: "javascript"
+      filename: "webpack.config.js"
+      min_stars: 100
+    max_results: 50
+    tags: ["webpack", "react", "typescript"]
+
+  - name: "next-js-config"
+    query: "next.config"
+    filters:
+      language: "javascript"
+      filename: "next.config.js"
+      min_stars: 500
+    max_results: 30
+    tags: ["nextjs", "react", "ssr"]
+
+  - name: "remix-config"
+    query: "remix.config"
+    filters:
+      language: "javascript"
+      filename: "remix.config.js"
+      min_stars: 50
+    max_results: 20
+    tags: ["remix", "react", "ssr"]

@@ -1,4 +1,4 @@
-# gh-search Testing Strategy
+# gh-code-search Testing Strategy
 
 **Target**: 85%+ test coverage (matching gh-comment's excellence)  
 **Approach**: Mock-first, table-driven, comprehensive error testing  
@@ -429,33 +429,33 @@ func TestIntegrationWorkflows(t *testing.T) {
 ```bash
 # testdata/scripts/basic_search.txtar
 # Test basic search functionality
-> gh search "tsconfig.json" --language json --limit 2 --dry-run
+> gh code-search "tsconfig.json" --language json --limit 2 --dry-run
 stdout 'Would search: tsconfig.json language:json'
 ! stderr .
 
 # Test with real API (when available)
-[has-gh] gh search "package.json" --limit 1 --format json
+[has-gh] gh code-search "package.json" --limit 1 --format json
 [has-gh] stdout '"total_count":'
 [has-gh] stdout '"repository":'
 
 # testdata/scripts/saved_searches.txtar  
 # Test saved search workflow
-> gh search save "react-configs" "tsconfig.json" --repo "*react*" --language json
+> gh code-search save "react-configs" "tsconfig.json" --repo "*react*" --language json
 stdout 'Saved search: react-configs'
 
-> gh search --saved react-configs --dry-run
+> gh code-search --saved react-configs --dry-run
 stdout 'Would search: tsconfig.json repo:*react* language:json'
 
-> gh search list-saved
+> gh code-search list-saved
 stdout 'react-configs'
 
 # testdata/scripts/error_handling.txtar
 # Test error scenarios
-> ! gh search ""
+> ! gh code-search ""
 stderr 'search query cannot be empty'
 stderr 'Examples:'
 
-> ! gh search "invalid query syntax !!!"
+> ! gh code-search "invalid query syntax !!!"
 stderr 'invalid search query syntax'
 stderr 'GitHub Search Syntax'
 ```

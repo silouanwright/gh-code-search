@@ -1,0 +1,52 @@
+name: "JavaScript Ecosystem Analysis"
+description: "Compare build tools and configuration patterns across major JavaScript frameworks"
+output:
+  format: "comparison"
+  compare: true
+  aggregate: true
+
+searches:
+  - name: "vue-ecosystem"
+    query: "vue.config"
+    filters:
+      language: "javascript"
+      owner: ["vuejs", "nuxt"]
+      min_stars: 50
+    max_results: 25
+    tags: ["vue", "build-tools", "spa"]
+
+  - name: "angular-ecosystem"
+    query: "angular.json"
+    filters:
+      language: "json"
+      owner: ["angular"]
+      min_stars: 100
+    max_results: 25
+    tags: ["angular", "build-tools", "spa"]
+
+  - name: "svelte-ecosystem"
+    query: "svelte.config"
+    filters:
+      language: "javascript"
+      owner: ["sveltejs"]
+      min_stars: 20
+    max_results: 20
+    tags: ["svelte", "build-tools", "spa"]
+
+  - name: "vite-configs"
+    query: "vite.config"
+    filters:
+      language: "typescript"
+      filename: "vite.config.ts"
+      min_stars: 200
+    max_results: 40
+    tags: ["vite", "build-tools", "universal"]
+
+  - name: "rollup-configs"
+    query: "rollup.config"
+    filters:
+      language: "javascript"
+      filename: "rollup.config.js"
+      min_stars: 100
+    max_results: 30
+    tags: ["rollup", "build-tools", "bundler"]

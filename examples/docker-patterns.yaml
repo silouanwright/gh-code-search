@@ -1,0 +1,42 @@
+name: "Docker Configuration Patterns"
+description: "Analyze Docker and containerization patterns across different project types"
+output:
+  format: "combined"
+  directory: "docker-analysis"
+  aggregate: true
+
+searches:
+  - name: "node-dockerfiles"
+    query: "dockerfile"
+    filters:
+      language: "dockerfile"
+      repository: ["**/node*", "**/express*", "**/react*"]
+      min_stars: 200
+    max_results: 40
+    tags: ["docker", "nodejs", "javascript"]
+
+  - name: "python-dockerfiles"
+    query: "dockerfile"
+    filters:
+      language: "dockerfile"
+      repository: ["**/python*", "**/django*", "**/flask*"]
+      min_stars: 200
+    max_results: 40
+    tags: ["docker", "python", "web"]
+
+  - name: "go-dockerfiles"
+    query: "dockerfile"
+    filters:
+      language: "dockerfile"
+      repository: ["**/go*", "**/golang*"]
+      min_stars: 100
+    max_results: 30
+    tags: ["docker", "go", "microservices"]
+
+  - name: "docker-compose-configs"
+    query: "docker-compose.yml"
+    filters:
+      filename: "docker-compose.yml"
+      min_stars: 100
+    max_results: 50
+    tags: ["docker-compose", "orchestration", "development"]

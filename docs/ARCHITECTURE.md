@@ -1,4 +1,4 @@
-# gh-search Architecture Specification
+# gh-code-search Architecture Specification
 
 **Based on**: gh-comment's proven patterns and architecture  
 **Language**: Go (following gh-comment's mature patterns)  
@@ -8,7 +8,7 @@
 
 ### **Directory Layout**
 ```
-gh-search/
+gh-code-search/
 ├── main.go                          # Entry point
 ├── go.mod, go.sum                   # Go modules
 ├── README.md                        # User documentation
@@ -70,7 +70,7 @@ gh-search/
 │   ├── PATTERNS.md                  # Common search patterns
 │   └── API.md                       # GitHub API integration notes
 ├── examples/                        # Configuration examples
-│   ├── .gh-search.yaml              # Example config
+│   ├── .gh-code-search.yaml              # Example config
 │   ├── saved-searches.yaml          # Example saved searches
 │   └── templates/                   # Generated templates
 ├── scripts/                         # Build & utility scripts
@@ -144,19 +144,19 @@ var searchCmd = &cobra.Command{
     `),
     Example: heredoc.Doc(`
         # Find TypeScript configurations
-        gh search "tsconfig.json" --language json --limit 10
+        gh code-search "tsconfig.json" --language json --limit 10
         
         # Search React components with hooks
-        gh search "useState" --language typescript --extension tsx
+        gh code-search "useState" --language typescript --extension tsx
         
         # Find Docker configurations in popular repos
-        gh search "dockerfile" --filename dockerfile --repo "**/react" --limit 5
+        gh code-search "dockerfile" --filename dockerfile --repo "**/react" --limit 5
         
         # Save a search for reuse
-        gh search "vite.config" --language javascript --save vite-configs
+        gh code-search "vite.config" --language javascript --save vite-configs
         
         # Compare different approaches
-        gh search "eslint.config.js" --compare --highlight-differences
+        gh code-search "eslint.config.js" --compare --highlight-differences
     `),
     Args: cobra.MinimumNArgs(1),
     RunE: runSearch,
@@ -195,17 +195,17 @@ func handleSearchError(err error, query string) error {
     // Rate limiting (most common issue)
     if strings.Contains(errMsg, "rate limit") {
         resetTime := extractRateLimitReset(err)
-        return fmt.Errorf("GitHub search rate limit exceeded: %w\n\n💡 **Solutions**:\n  • Wait %s for automatic reset\n  • Use more specific search terms: --language, --repo, --filename\n  • Search specific repositories: --repo owner/repo\n  • Use saved searches: gh search --saved <name>\n\n📊 **Rate Limit Status**:\n  Run: gh search --rate-limit", err, resetTime)
+        return fmt.Errorf("GitHub search rate limit exceeded: %w\n\n💡 **Solutions**:\n  • Wait %s for automatic reset\n  • Use more specific search terms: --language, --repo, --filename\n  • Search specific repositories: --repo owner/repo\n  • Use saved searches: gh code-search --saved <name>\n\n📊 **Rate Limit Status**:\n  Run: gh code-search --rate-limit", err, resetTime)
     }
     
     // Invalid query syntax
     if strings.Contains(errMsg, "query") && strings.Contains(errMsg, "invalid") {
-        return fmt.Errorf("invalid search query syntax: %w\n\n💡 **GitHub Search Syntax**:\n  • Exact phrases: \"exact match\"\n  • Boolean operators: config AND typescript\n  • Exclusions: config NOT test\n  • Wildcards: *.config.js\n  • File filters: filename:package.json\n  • Language filters: language:go\n\n📖 **Examples**:\n  gh search \"tsconfig.json\" --language json\n  gh search \"useEffect\" --language typescript --extension tsx", err)
+        return fmt.Errorf("invalid search query syntax: %w\n\n💡 **GitHub Search Syntax**:\n  • Exact phrases: \"exact match\"\n  • Boolean operators: config AND typescript\n  • Exclusions: config NOT test\n  • Wildcards: *.config.js\n  • File filters: filename:package.json\n  • Language filters: language:go\n\n📖 **Examples**:\n  gh code-search \"tsconfig.json\" --language json\n  gh code-search \"useEffect\" --language typescript --extension tsx", err)
     }
     
     // No results found
     if strings.Contains(errMsg, "no results") || strings.Contains(errMsg, "0 results") {
-        return fmt.Errorf("no results found for query: %s\n\n💡 **Try These Approaches**:\n  • Broaden search terms: remove specific filters\n  • Check spelling and syntax\n  • Search popular repositories: --repo facebook/react\n  • Use broader language filters: --language javascript (not typescript)\n  • Try related terms: \"config\" instead of \"configuration\"\n\n🔍 **Search Tips**:\n  gh search --help    # See all available filters\n  gh search patterns  # Browse common search patterns", query)
+        return fmt.Errorf("no results found for query: %s\n\n💡 **Try These Approaches**:\n  • Broaden search terms: remove specific filters\n  • Check spelling and syntax\n  • Search popular repositories: --repo facebook/react\n  • Use broader language filters: --language javascript (not typescript)\n  • Try related terms: \"config\" instead of \"configuration\"\n\n🔍 **Search Tips**:\n  gh code-search --help    # See all available filters\n  gh code-search patterns  # Browse common search patterns", query)
     }
     
     // Permission/authentication errors  
@@ -215,11 +215,11 @@ func handleSearchError(err error, query string) error {
     
     // Network/connectivity issues
     if strings.Contains(errMsg, "network") || strings.Contains(errMsg, "timeout") || strings.Contains(errMsg, "connection") {
-        return fmt.Errorf("network connectivity issue: %w\n\n💡 **Troubleshooting**:\n  • Check internet connection\n  • Verify GitHub status: https://status.github.com\n  • Try with --verbose for detailed logging\n  • Reduce request size: --limit 10\n\n🔧 **If persistent**:\n  gh search --debug <query>  # Enable debug logging", err)
+        return fmt.Errorf("network connectivity issue: %w\n\n💡 **Troubleshooting**:\n  • Check internet connection\n  • Verify GitHub status: https://status.github.com\n  • Try with --verbose for detailed logging\n  • Reduce request size: --limit 10\n\n🔧 **If persistent**:\n  gh code-search --debug <query>  # Enable debug logging", err)
     }
     
     // Generic fallback with helpful context
-    return fmt.Errorf("search failed: %w\n\n💡 **General Troubleshooting**:\n  • Try with --verbose for detailed output\n  • Check GitHub status: https://status.github.com\n  • Verify authentication: gh auth status\n  • Use simpler query: remove complex filters\n\n📖 **Get Help**:\n  gh search --help     # Command documentation\n  gh search patterns   # Common search examples", err)
+    return fmt.Errorf("search failed: %w\n\n💡 **General Troubleshooting**:\n  • Try with --verbose for detailed output\n  • Check GitHub status: https://status.github.com\n  • Verify authentication: gh auth status\n  • Use simpler query: remove complex filters\n\n📖 **Get Help**:\n  gh code-search --help     # Command documentation\n  gh code-search patterns   # Common search examples", err)
 }
 ```
 
