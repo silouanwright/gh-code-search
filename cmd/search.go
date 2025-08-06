@@ -22,6 +22,7 @@ var (
 	searchOwner     []string
 	searchSize      string
 	searchLimit     int
+	searchPage      int    // New: page-based pagination
 	contextLines    int
 	outputFormat    string
 	saveAs          string
@@ -47,13 +48,18 @@ ranking based on repository quality indicators.`,
   gh search "vite.config" --language javascript --context 30
   gh search "dockerfile" --filename dockerfile --repo "**/react"
   
-  # Pattern research with filtering  
-  gh search "eslint.config.js" --language javascript --save eslint-research
-  gh search "next.config.js" --repo vercel/next.js --context 50
+  # Page-based search (API efficient for large datasets)
+  gh search "config" --page 1 --limit 100        # Get first 100 results
+  gh search "config" --page 2 --limit 100        # Get next 100 results
+  gh search "config" --page 3 --limit 50         # Get results 201-250
   
-  # Advanced filtering for quality results
-  gh search "tailwind.config" --min-stars 1000 --language javascript
-  gh search "package.json" --path "examples/" --limit 20
+  # Organization/owner-specific searches
+  gh search "eslint.config.js" --owner microsoft --language javascript
+  gh search "next.config.js" --owner vercel --page 1 --limit 50
+  gh search "interface" --owner google --owner facebook --language typescript
+  
+  # Auto-pagination (less API efficient but convenient)
+  gh search "hooks" --limit 200                  # Automatically fetches 2 pages
 
   # Pipe results for further processing
   gh search "react hooks" --language typescript --pipe`,
@@ -149,18 +155,96 @@ func buildSearchQuery(terms []string) string {
 	return strings.Join(parts, " ")
 }
 
-// executeSearch performs the GitHub search with options
+// executeSearch performs the GitHub search with optional pagination
 func executeSearch(ctx context.Context, query string) (*github.SearchResults, error) {
+	// If user specified a page, use single-page mode (more API efficient)
+	if searchPage > 0 {
+		return executeSinglePageSearch(ctx, query)
+	}
+	
+	// Otherwise, use automatic pagination for high limits (legacy behavior)
+	return executeAutoPageSearch(ctx, query)
+}
+
+// executeSinglePageSearch fetches a specific page of results (API efficient)
+func executeSinglePageSearch(ctx context.Context, query string) (*github.SearchResults, error) {
+	// Cap limit to GitHub's max per page
+	perPage := searchLimit
+	if perPage > GitHubMaxResultsPerPage {
+		perPage = GitHubMaxResultsPerPage
+	}
+
 	opts := &github.SearchOptions{
 		Sort:  sort,
 		Order: order,
 		ListOptions: github.ListOptions{
-			Page:    1,
-			PerPage: searchLimit,
+			Page:    searchPage,
+			PerPage: perPage,
 		},
 	}
 
-	return searchClient.SearchCode(ctx, query, opts)
+	results, err := searchClient.SearchCode(ctx, query, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	if verbose {
+		totalPages := 0
+		if results.Total != nil && *results.Total > 0 {
+			totalPages = (*results.Total + GitHubMaxResultsPerPage - 1) / GitHubMaxResultsPerPage
+		}
+		fmt.Printf("📄 Page %d of ~%d (%d results on this page)\n", 
+			searchPage, totalPages, len(results.Items))
+	}
+
+	return results, nil
+}
+
+// executeAutoPageSearch automatically paginates for high limits (legacy behavior) 
+func executeAutoPageSearch(ctx context.Context, query string) (*github.SearchResults, error) {
+	var allResults *github.SearchResults
+	page := 1
+	remaining := searchLimit
+
+	for remaining > 0 {
+		// GitHub API per_page is capped at 100
+		perPage := remaining
+		if perPage > GitHubMaxResultsPerPage {
+			perPage = GitHubMaxResultsPerPage
+		}
+
+		opts := &github.SearchOptions{
+			Sort:  sort,
+			Order: order,
+			ListOptions: github.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		}
+
+		results, err := searchClient.SearchCode(ctx, query, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		if allResults == nil {
+			// First page - initialize with the results
+			allResults = results
+		} else {
+			// Subsequent pages - append items
+			allResults.Items = append(allResults.Items, results.Items...)
+		}
+
+		// Break if fewer results than requested were returned (no more data)
+		if len(results.Items) < perPage {
+			break
+		}
+
+		remaining -= len(results.Items)
+		page++
+	}
+
+	return allResults, nil
 }
 
 // outputResults formats and outputs the search results
@@ -235,7 +319,7 @@ func outputDefaultFormat(results *github.SearchResults) error {
 			fmt.Printf("🔗 [View on GitHub](%s)\n\n", *item.HTMLURL)
 		}
 
-		fmt.Println("---\n")
+		fmt.Println("---")
 	}
 
 	return nil
@@ -288,7 +372,7 @@ func init() {
 	searchCmd.Flags().StringVarP(&searchFilename, "filename", "f", "", "exact filename match")
 	searchCmd.Flags().StringVarP(&searchExtension, "extension", "e", "", "file extension filter")
 	searchCmd.Flags().StringVarP(&searchPath, "path", "p", "", "file path filter")
-	searchCmd.Flags().StringSliceVarP(&searchOwner, "owner", "o", nil, "repository owner filter")
+	searchCmd.Flags().StringSliceVarP(&searchOwner, "owner", "o", nil, "repository owner/organization filter")
 	searchCmd.Flags().StringVar(&searchSize, "size", "", "file size filter (e.g., '>1000', '<500')")
 
 	// Quality & ranking flags (enhanced from ghx)
@@ -297,7 +381,8 @@ func init() {
 	searchCmd.Flags().StringVar(&order, "order", "desc", "sort order: asc, desc")
 
 	// Output control flags (migrated from ghx)
-	searchCmd.Flags().IntVar(&searchLimit, "limit", 50, "maximum results (default: 50, max: 1000)")
+	searchCmd.Flags().IntVar(&searchLimit, "limit", 50, "maximum results per page (default: 50, max: 100)")
+	searchCmd.Flags().IntVar(&searchPage, "page", 0, "specific page number (more API efficient than auto-pagination)")
 	searchCmd.Flags().IntVar(&contextLines, "context", 20, "context lines around matches")
 	searchCmd.Flags().StringVar(&outputFormat, "format", "default", "output format: default, json, markdown, compact")
 	searchCmd.Flags().BoolVarP(&pipe, "pipe", "", false, "output to stdout (for piping to other tools)")

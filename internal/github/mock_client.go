@@ -8,11 +8,12 @@ import (
 
 // MockClient implements GitHubAPI for testing
 type MockClient struct {
-	SearchResults map[string]*SearchResults
-	FileContents  map[string][]byte
-	Errors        map[string]error
-	CallLog       []MockCall
-	RateLimits    map[string]*RateLimit
+	SearchResults         map[string]*SearchResults
+	PaginatedSearchResults map[string]map[int]*SearchResults // query -> page -> results
+	FileContents          map[string][]byte
+	Errors                map[string]error
+	CallLog               []MockCall
+	RateLimits            map[string]*RateLimit
 }
 
 // MockCall represents a logged API call for verification
@@ -25,11 +26,12 @@ type MockCall struct {
 // NewMockClient creates a new mock GitHub API client
 func NewMockClient() *MockClient {
 	return &MockClient{
-		SearchResults: make(map[string]*SearchResults),
-		FileContents:  make(map[string][]byte),
-		Errors:        make(map[string]error),
-		CallLog:       make([]MockCall, 0),
-		RateLimits:    make(map[string]*RateLimit),
+		SearchResults:         make(map[string]*SearchResults),
+		PaginatedSearchResults: make(map[string]map[int]*SearchResults),
+		FileContents:          make(map[string][]byte),
+		Errors:                make(map[string]error),
+		CallLog:               make([]MockCall, 0),
+		RateLimits:            make(map[string]*RateLimit),
 	}
 }
 
@@ -42,7 +44,23 @@ func (m *MockClient) SearchCode(ctx context.Context, query string, opts *SearchO
 		return nil, err
 	}
 	
-	// Return configured results
+	// Check for paginated results first (for testing pagination)
+	if paginatedResults, exists := m.PaginatedSearchResults[query]; exists {
+		page := 1
+		if opts != nil && opts.ListOptions.Page > 0 {
+			page = opts.ListOptions.Page
+		}
+		if pageResults, pageExists := paginatedResults[page]; pageExists {
+			return pageResults, nil
+		}
+		// If specific page not found, return empty results
+		return &SearchResults{
+			Total: IntPtr(0),
+			Items: []SearchItem{},
+		}, nil
+	}
+	
+	// Return configured single-page results
 	if results, exists := m.SearchResults[query]; exists {
 		return results, nil
 	}
@@ -100,6 +118,11 @@ func (m *MockClient) GetRateLimit(ctx context.Context) (*RateLimit, error) {
 // SetSearchResults configures mock search results for a query
 func (m *MockClient) SetSearchResults(query string, results *SearchResults) {
 	m.SearchResults[query] = results
+}
+
+// SetPaginatedSearchResults configures mock paginated search results for testing pagination
+func (m *MockClient) SetPaginatedSearchResults(query string, pageResults map[int]*SearchResults) {
+	m.PaginatedSearchResults[query] = pageResults
 }
 
 // SetFileContent configures mock file content
@@ -171,9 +194,15 @@ func (m *MockClient) VerifyCall(method string, args ...interface{}) bool {
 	return false
 }
 
+// GetAllCalls returns all logged API calls for verification
+func (m *MockClient) GetAllCalls() []MockCall {
+	return m.CallLog
+}
+
 // Reset clears all mock data and call logs
 func (m *MockClient) Reset() {
 	m.SearchResults = make(map[string]*SearchResults)
+	m.PaginatedSearchResults = make(map[string]map[int]*SearchResults)
 	m.FileContents = make(map[string][]byte)
 	m.Errors = make(map[string]error)
 	m.CallLog = make([]MockCall, 0)

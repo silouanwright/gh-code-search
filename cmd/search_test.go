@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"context"
-	"strings"
+	"fmt"
 	"testing"
 	"time"
 
@@ -573,6 +573,170 @@ func TestSearchCommandIntegration(t *testing.T) {
 	// Verify expected API interaction
 	assert.Equal(t, 1, mockClient.GetCallCount("SearchCode"))
 	assert.True(t, mockClient.VerifyCall("SearchCode", "test language:go"))
+}
+
+// TestLimitFunctionality tests limit functionality including pagination (Issue #2 from ghx)
+func TestLimitFunctionality(t *testing.T) {
+	tests := []struct {
+		name           string
+		limit          int
+		mockSetup      func(*github.MockClient)
+		expectedCalls  int
+		expectedItems  int
+		description    string
+	}{
+		{
+			name:  "limit under 100 - single API call",
+			limit: 50,
+			mockSetup: func(mock *github.MockClient) {
+				mock.SetSearchResults("test", github.CreateTestSearchResults(50,
+					createMultipleTestItems(50)...,
+				))
+			},
+			expectedCalls: 1,
+			expectedItems: 50,
+			description:   "Should make single API call for limits ≤ 100",
+		},
+		{
+			name:  "limit exactly 100 - single API call",
+			limit: 100,
+			mockSetup: func(mock *github.MockClient) {
+				mock.SetSearchResults("test", github.CreateTestSearchResults(100,
+					createMultipleTestItems(100)...,
+				))
+			},
+			expectedCalls: 1,
+			expectedItems: 100,
+			description:   "Should make single API call for limit of exactly 100",
+		},
+		{
+			name:  "limit over 100 - multiple API calls (pagination)",
+			limit: 150,
+			mockSetup: func(mock *github.MockClient) {
+				// First call returns 100 items
+				mock.SetPaginatedSearchResults("test", map[int]*github.SearchResults{
+					1: github.CreateTestSearchResults(100, createMultipleTestItems(100)...),
+					2: github.CreateTestSearchResults(50, createMultipleTestItems(50)...),
+				})
+			},
+			expectedCalls: 2,
+			expectedItems: 150,
+			description:   "Should paginate for limits > 100",
+		},
+		{
+			name:  "limit over 200 - three API calls",
+			limit: 250,
+			mockSetup: func(mock *github.MockClient) {
+				mock.SetPaginatedSearchResults("test", map[int]*github.SearchResults{
+					1: github.CreateTestSearchResults(100, createMultipleTestItems(100)...),
+					2: github.CreateTestSearchResults(100, createMultipleTestItems(100)...),
+					3: github.CreateTestSearchResults(50, createMultipleTestItems(50)...),
+				})
+			},
+			expectedCalls: 3,
+			expectedItems: 250,
+			description:   "Should handle multiple pages for large limits",
+		},
+		{
+			name:  "partial results - stops when fewer returned",
+			limit: 200,
+			mockSetup: func(mock *github.MockClient) {
+				// First call returns 100, second returns only 25 (indicating end of results)
+				mock.SetPaginatedSearchResults("test", map[int]*github.SearchResults{
+					1: github.CreateTestSearchResults(100, createMultipleTestItems(100)...),
+					2: github.CreateTestSearchResults(25, createMultipleTestItems(25)...),
+				})
+			},
+			expectedCalls: 2,
+			expectedItems: 125, // Only 125 total items available
+			description:   "Should stop pagination when fewer results returned than requested",
+		},
+		{
+			name:  "maximum limit 1000 - ten API calls",
+			limit: 1000,
+			mockSetup: func(mock *github.MockClient) {
+				pages := make(map[int]*github.SearchResults)
+				for i := 1; i <= 10; i++ {
+					pages[i] = github.CreateTestSearchResults(100, createMultipleTestItems(100)...)
+				}
+				mock.SetPaginatedSearchResults("test", pages)
+			},
+			expectedCalls: 10,
+			expectedItems: 1000,
+			description:   "Should handle maximum limit of 1000 results",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset flags
+			resetSearchFlags()
+			defer resetSearchFlags()
+
+			// Set limit
+			searchLimit = tt.limit
+
+			// Set up mock client
+			mockClient := github.NewMockClient()
+			if tt.mockSetup != nil {
+				tt.mockSetup(mockClient)
+			}
+
+			originalClient := searchClient
+			searchClient = mockClient
+			defer func() { searchClient = originalClient }()
+
+			// Execute search
+			results, err := executeSearch(context.Background(), "test")
+			
+			// Verify no error
+			assert.NoError(t, err, tt.description)
+			
+			// Verify correct number of API calls
+			assert.Equal(t, tt.expectedCalls, mockClient.GetCallCount("SearchCode"), 
+				"Expected %d API calls for limit %d (%s)", tt.expectedCalls, tt.limit, tt.description)
+
+			// Verify correct number of items returned
+			if results != nil {
+				assert.Equal(t, tt.expectedItems, len(results.Items), 
+					"Expected %d items for limit %d (%s)", tt.expectedItems, tt.limit, tt.description)
+			}
+
+			// Verify pagination parameters were correct
+			calls := mockClient.GetAllCalls()
+			for i, call := range calls {
+				if call.Method == "SearchCode" && len(call.Args) >= 2 {
+					if opts, ok := call.Args[1].(*github.SearchOptions); ok {
+						expectedPage := i + 1
+						assert.Equal(t, expectedPage, opts.ListOptions.Page, 
+							"Call %d should be for page %d", i+1, expectedPage)
+						
+						// PerPage should be min(remaining, 100)
+						remaining := tt.limit - (i * 100)
+						expectedPerPage := remaining
+						if expectedPerPage > 100 {
+							expectedPerPage = 100
+						}
+						assert.Equal(t, expectedPerPage, opts.ListOptions.PerPage,
+							"Call %d should request %d items per page", i+1, expectedPerPage)
+					}
+				}
+			}
+		})
+	}
+}
+
+// createMultipleTestItems creates multiple test search items for pagination testing
+func createMultipleTestItems(count int) []github.SearchItem {
+	items := make([]github.SearchItem, count)
+	for i := 0; i < count; i++ {
+		items[i] = github.CreateTestSearchItem(
+			fmt.Sprintf("repo%d/test", i+1),
+			fmt.Sprintf("file%d.go", i+1),
+			fmt.Sprintf("content for item %d", i+1),
+		)
+	}
+	return items
 }
 
 // TestGhxCompatibility tests compatibility with original ghx command patterns

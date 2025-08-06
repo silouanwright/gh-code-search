@@ -27,7 +27,7 @@ gh search "useState" --language typescript --extension tsx
 gh search "dockerfile" --min-stars 1000 --limit 5
 ```
 
-### Advanced Filtering
+### Advanced Filtering & Pagination
 
 ```bash
 # Search specific repositories
@@ -36,8 +36,13 @@ gh search "vite.config" --repo vercel/next.js --repo facebook/react
 # Filter by file location and size
 gh search "component" --path "src/components" --size ">1000"
 
-# Search by repository owner
-gh search "interface" --owner microsoft --language typescript
+# Search by organization/owner (multiple supported)
+gh search "interface" --owner microsoft --owner google --language typescript
+
+# Page-based search (API efficient for large datasets)
+gh search "config" --page 1 --limit 100        # Get first 100 results
+gh search "config" --page 2 --limit 100        # Get next 100 results  
+gh search "config" --page 3 --limit 50         # Get results 201-250
 ```
 
 ### Output Formats
@@ -85,16 +90,31 @@ gh search "dockerfile" --min-stars 1000 --repo "**/production"
 gh search "github/workflows" --filename "*.yml" --path ".github/workflows"
 ```
 
+### Organization-Wide Code Search
+
+Perfect for exploring patterns across all repositories in an organization:
+
+```bash
+# All TypeScript configs across Microsoft repos
+gh search "tsconfig.json" --owner microsoft --language json
+
+# React patterns from top organizations
+gh search "useEffect" --owner facebook --owner vercel --language typescript
+
+# Go best practices from Google's projects
+gh search "interface" --owner google --language go --min-stars 1000
+```
+
 ### Learning from Popular Projects
 
 ```bash
-# React patterns from top repositories
+# Specific repository patterns
 gh search "useEffect" --repo facebook/react --repo vercel/next.js
 
 # Go patterns from well-maintained projects
 gh search "interface" --language go --min-stars 5000 --limit 20
 
-# Python best practices
+# Python best practices across organizations
 gh search "class" --language python --owner google --owner microsoft
 ```
 
@@ -176,10 +196,11 @@ gh search "language:go filename:main.go stars:>100"
 - `--filename, -f`: Exact filename match
 - `--extension, -e`: File extension filter
 - `--path, -p`: File path filter
-- `--owner, -o`: Repository owner filter
+- `--owner, -o`: Repository owner/organization filter (multiple supported)
 - `--size`: File size filter (e.g., ">1000", "<500")
 - `--min-stars`: Minimum repository stars
-- `--limit`: Maximum results (default: 50, max: 1000)
+- `--limit`: Maximum results per page (default: 50, max: 100)
+- `--page`: Specific page number (more API efficient than auto-pagination)
 - `--context`: Context lines around matches (default: 20)
 - `--format`: Output format (default, json, markdown, compact)
 - `--pipe`: Pipe-friendly output for scripting
