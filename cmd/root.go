@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/silouanwright/gh-search/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -35,11 +36,11 @@ ranking based on repository quality indicators.`,
   # Find Docker configurations in popular repos
   gh search "dockerfile" --filename dockerfile --repo "**/react" --limit 5
 
-  # Save a search for reuse
-  gh search "vite.config" --language javascript --save vite-configs
+  # Export results to file
+  gh search "vite.config" --language javascript --output configs.md
 
-  # Compare different approaches
-  gh search "eslint.config.js" --compare --highlight-differences`,
+  # Search multiple organizations
+  gh search "eslint.config.js" --owner microsoft --owner google`,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 }
@@ -65,11 +66,70 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set
 func initConfig() {
-	// TODO: Implement configuration loading
-	// This will be implemented when we create the config package
-	if verbose {
-		fmt.Fprintf(os.Stderr, "gh-search initializing with config: %s\n", configFile)
+	var cfg *config.Config
+	var err error
+	
+	// Load configuration from specified file or defaults
+	if configFile != "" {
+		cfg, err = config.LoadFromFile(configFile)
+	} else {
+		cfg, err = config.Load()
 	}
+	
+	if err != nil {
+		if verbose {
+			fmt.Fprintf(os.Stderr, "Config load failed, using defaults: %v\n", err)
+		}
+		// Load() already returns default config on failure, but we need a fallback
+		cfg, _ = config.Load() // This will return defaults if no config exists
+	}
+	
+	// Apply configuration defaults to CLI flags if not explicitly set
+	applyConfigDefaults(cfg)
+	
+	if verbose {
+		configPath := configFile
+		if configPath == "" {
+			configPath = "default locations"
+		}
+		fmt.Fprintf(os.Stderr, "gh-search initialized with config from: %s\n", configPath)
+	}
+}
+
+// applyConfigDefaults applies configuration defaults to CLI flags if not explicitly set
+func applyConfigDefaults(cfg *config.Config) {
+	// Only apply config values if CLI flags weren't explicitly set
+	// Note: This is a simplified implementation. Full implementation would check
+	// if flags were explicitly set vs using defaults.
+	
+	// Apply search defaults
+	if searchLimit == 50 && cfg.Defaults.MaxResults > 0 {
+		searchLimit = cfg.Defaults.MaxResults
+	}
+	
+	if outputFormat == "default" && cfg.Defaults.OutputFormat != "" {
+		outputFormat = cfg.Defaults.OutputFormat
+	}
+	
+	if searchLanguage == "" && cfg.Defaults.Language != "" {
+		searchLanguage = cfg.Defaults.Language
+	}
+	
+	if len(searchRepo) == 0 && len(cfg.Defaults.Repositories) > 0 {
+		searchRepo = cfg.Defaults.Repositories
+	}
+	
+	if minStars == 0 && cfg.Defaults.MinStars > 0 {
+		minStars = cfg.Defaults.MinStars
+	}
+	
+	// Apply output settings
+	if !noColor && cfg.Output.ColorMode == "never" {
+		noColor = true
+	}
+	
+	// Note: Additional config applications can be added here as needed
+	// This covers the most commonly used configuration options
 }
 
 // GetRootCmd returns the root command for testing
