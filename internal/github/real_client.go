@@ -52,9 +52,11 @@ func (c *RealClient) SearchCode(ctx context.Context, query string, opts *SearchO
 			Page:    opts.ListOptions.Page,
 			PerPage: opts.ListOptions.PerPage,
 		},
+		// Request text matches (code fragments) in results
+		TextMatch: true,
 	}
 
-	// Execute the search
+	// Execute the search with text match header
 	result, resp, err := c.client.Search.Code(ctx, query, searchOpts)
 	if err != nil {
 		return nil, formatGitHubError(err, resp)

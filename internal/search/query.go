@@ -285,14 +285,46 @@ func isValidLanguage(lang string) bool {
 
 // isValidSizeFormat checks if the size format is valid
 func isValidSizeFormat(size string) bool {
-	// Examples: >1000, <500, 100..200, =42
-	if strings.HasPrefix(size, ">") || strings.HasPrefix(size, "<") || 
-	   strings.HasPrefix(size, ">=") || strings.HasPrefix(size, "<=") ||
-	   strings.HasPrefix(size, "=") || strings.Contains(size, "..") {
-		return true
+	// Check for comparison operators with numbers
+	if strings.HasPrefix(size, ">=") {
+		var num int
+		_, err := fmt.Sscanf(size[2:], "%d", &num)
+		return err == nil
+	}
+	if strings.HasPrefix(size, "<=") {
+		var num int
+		_, err := fmt.Sscanf(size[2:], "%d", &num)
+		return err == nil
+	}
+	if strings.HasPrefix(size, ">") {
+		var num int
+		_, err := fmt.Sscanf(size[1:], "%d", &num)
+		return err == nil
+	}
+	if strings.HasPrefix(size, "<") {
+		var num int
+		_, err := fmt.Sscanf(size[1:], "%d", &num)
+		return err == nil
+	}
+	if strings.HasPrefix(size, "=") {
+		var num int
+		_, err := fmt.Sscanf(size[1:], "%d", &num)
+		return err == nil
 	}
 	
-	// Also allow plain numbers
+	// Check for range format (e.g., "100..200")
+	if strings.Contains(size, "..") {
+		parts := strings.Split(size, "..")
+		if len(parts) == 2 {
+			var num1, num2 int
+			_, err1 := fmt.Sscanf(parts[0], "%d", &num1)
+			_, err2 := fmt.Sscanf(parts[1], "%d", &num2)
+			return err1 == nil && err2 == nil
+		}
+		return false
+	}
+	
+	// Check for plain numbers
 	var num int
 	_, err := fmt.Sscanf(size, "%d", &num)
 	return err == nil
