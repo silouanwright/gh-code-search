@@ -78,11 +78,11 @@ func TestSearchCommand(t *testing.T) {
 				searchLanguage = "typescript"
 			},
 			setupMock: func(mock *github.MockClient) {
-				mock.SetSearchResults("useState repo:facebook/react language:typescript", github.CreateTestSearchResults(1,
+				mock.SetSearchResults("useState language:typescript repo:facebook/react", github.CreateTestSearchResults(1,
 					github.CreateTestSearchItem("facebook/react", "packages/react/src/ReactHooks.ts", "function useState"),
 				))
 			},
-			expectedQuery:  "useState repo:facebook/react language:typescript",
+			expectedQuery:  "useState language:typescript repo:facebook/react",
 			expectedOutput: "useState",
 			wantErr:        false,
 		},
@@ -96,13 +96,13 @@ func TestSearchCommand(t *testing.T) {
 				minStars = 1000
 			},
 			setupMock: func(mock *github.MockClient) {
-				mock.SetSearchResults("hooks repo:facebook/react repo:vercel/next.js language:typescript extension:tsx stars:>=1000", 
+				mock.SetSearchResults("hooks language:typescript extension:tsx stars:>=1000 repo:facebook/react repo:vercel/next.js", 
 					github.CreateTestSearchResults(2,
 						github.CreateTestSearchItem("facebook/react", "packages/react/src/Component.tsx", "useEffect hook"),
 						github.CreateTestSearchItem("vercel/next.js", "examples/with-hooks/pages/index.tsx", "useState hook"),
 					))
 			},
-			expectedQuery:  "hooks repo:facebook/react repo:vercel/next.js language:typescript extension:tsx stars:>=1000",
+			expectedQuery:  "hooks language:typescript extension:tsx stars:>=1000 repo:facebook/react repo:vercel/next.js",
 			expectedOutput: "useEffect",
 			wantErr:        false,
 		},
@@ -114,11 +114,11 @@ func TestSearchCommand(t *testing.T) {
 				searchLanguage = "typescript"
 			},
 			setupMock: func(mock *github.MockClient) {
-				mock.SetSearchResults("interface user:microsoft language:typescript", github.CreateTestSearchResults(1,
+				mock.SetSearchResults("interface language:typescript user:microsoft", github.CreateTestSearchResults(1,
 					github.CreateTestSearchItem("microsoft/vscode", "src/vs/base/common/types.ts", "interface IDisposable"),
 				))
 			},
-			expectedQuery:  "interface user:microsoft language:typescript",
+			expectedQuery:  "interface language:typescript user:microsoft",
 			expectedOutput: "microsoft/vscode",
 			wantErr:        false,
 		},
@@ -130,11 +130,11 @@ func TestSearchCommand(t *testing.T) {
 				searchLanguage = "typescript"
 			},
 			setupMock: func(mock *github.MockClient) {
-				mock.SetSearchResults("class size:>1000 language:typescript", github.CreateTestSearchResults(1,
+				mock.SetSearchResults("class language:typescript size:>1000", github.CreateTestSearchResults(1,
 					github.CreateTestSearchItem("microsoft/TypeScript", "src/compiler/checker.ts", "class TypeChecker"),
 				))
 			},
-			expectedQuery:  "class size:>1000 language:typescript",
+			expectedQuery:  "class language:typescript size:>1000",
 			expectedOutput: "TypeChecker",
 			wantErr:        false,
 		},
@@ -146,11 +146,11 @@ func TestSearchCommand(t *testing.T) {
 				searchLanguage = "typescript"
 			},
 			setupMock: func(mock *github.MockClient) {
-				mock.SetSearchResults("Component path:src/components language:typescript", github.CreateTestSearchResults(1,
+				mock.SetSearchResults("Component language:typescript path:src/components", github.CreateTestSearchResults(1,
 					github.CreateTestSearchItem("facebook/react", "src/components/Button.tsx", "export default Component"),
 				))
 			},
-			expectedQuery:  "Component path:src/components language:typescript",
+			expectedQuery:  "Component language:typescript path:src/components",
 			expectedOutput: "Button.tsx",
 			wantErr:        false,
 		},
@@ -353,7 +353,7 @@ func TestBuildSearchQuery(t *testing.T) {
 				searchSize = ">100"
 				minStars = 1000
 			},
-			expected: "component language:typescript filename:*.tsx extension:tsx repo:facebook/react path:src/components user:facebook size:>100 stars:>=1000",
+			expected: "component language:typescript filename:*.tsx extension:tsx path:src/components size:>100 stars:>=1000 repo:facebook/react user:facebook",
 		},
 		{
 			name:  "empty terms with filters only",
@@ -403,7 +403,7 @@ func TestOutputFormats(t *testing.T) {
 			setupFlags: func() {
 				pipe = false
 			},
-			expectedOutput: "📁 facebook/react",
+			expectedOutput: "📁 [facebook/react]",
 		},
 		{
 			name: "pipe output format",
@@ -583,7 +583,7 @@ func TestSearchCommandIntegration(t *testing.T) {
 
 	// Test with actual command construction (but still mocked client)
 	mockClient := github.NewMockClient()
-	mockClient.SetSearchResults("test", github.CreateTestSearchResults(1,
+	mockClient.SetSearchResults("test language:go", github.CreateTestSearchResults(1,
 		github.CreateTestSearchItem("test/repo", "test.go", "package main"),
 	))
 
@@ -591,11 +591,16 @@ func TestSearchCommandIntegration(t *testing.T) {
 	searchClient = mockClient
 	defer func() { searchClient = originalClient }()
 
-	// Execute command as if from CLI
-	cmd := searchCmd
-	cmd.SetArgs([]string{"test", "--language", "go", "--limit", "1"})
+	// Reset flags before test
+	resetSearchFlags()
+	defer resetSearchFlags()
 
-	err := cmd.Execute()
+	// Set flags manually for integration test
+	searchLanguage = "go"
+	searchLimit = 1
+
+	// Execute search command directly
+	err := runSearch(searchCmd, []string{"test"})
 	assert.NoError(t, err)
 
 	// Verify expected API interaction

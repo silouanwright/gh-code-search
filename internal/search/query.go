@@ -181,20 +181,29 @@ func (qb *QueryBuilder) Build() string {
 		parts = append(parts, termString)
 	}
 
-	// Add single-value qualifiers (language:go, filename:config.json)
-	for key, value := range qb.qualifiers {
-		parts = append(parts, fmt.Sprintf("%s:%s", key, value))
-	}
-
-	// Add constraints (stars:>=100, pushed:>2023-01-01)
-	for key, value := range qb.constraints {
-		parts = append(parts, fmt.Sprintf("%s:%s", key, value))
-	}
-
-	// Add multi-value filters (repo:owner/name repo:other/repo)
-	for key, values := range qb.filters {
-		for _, value := range values {
+	// Add single-value qualifiers in consistent order (language:go, filename:config.json)
+	qualifierOrder := []string{"language", "filename", "extension", "path", "size", "fork"}
+	for _, key := range qualifierOrder {
+		if value, exists := qb.qualifiers[key]; exists {
 			parts = append(parts, fmt.Sprintf("%s:%s", key, value))
+		}
+	}
+
+	// Add constraints in consistent order (stars:>=100, pushed:>2023-01-01)
+	constraintOrder := []string{"stars", "pushed"}
+	for _, key := range constraintOrder {
+		if value, exists := qb.constraints[key]; exists {
+			parts = append(parts, fmt.Sprintf("%s:%s", key, value))
+		}
+	}
+
+	// Add multi-value filters in consistent order (repo:owner/name repo:other/repo)
+	filterOrder := []string{"repo", "user", "in"}
+	for _, key := range filterOrder {
+		if values, exists := qb.filters[key]; exists {
+			for _, value := range values {
+				parts = append(parts, fmt.Sprintf("%s:%s", key, value))
+			}
 		}
 	}
 
