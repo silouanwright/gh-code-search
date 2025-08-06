@@ -287,35 +287,18 @@ func outputResults(results *github.SearchResults) error {
 }
 
 
-// detectLanguage detects programming language from file path
+// detectLanguage detects programming language from file path using constants map
 func detectLanguage(path string) string {
-	if strings.HasSuffix(path, ".go") {
-		return "go"
+	ext := filepath.Ext(path)
+	if lang, ok := LanguageExtensionMap[ext]; ok {
+		return lang
 	}
-	if strings.HasSuffix(path, ".js") {
-		return "javascript"
+	
+	// Special case for Dockerfile (no extension)
+	if strings.Contains(strings.ToLower(filepath.Base(path)), "dockerfile") {
+		return LanguageDockerfile
 	}
-	if strings.HasSuffix(path, ".ts") {
-		return "typescript"
-	}
-	if strings.HasSuffix(path, ".tsx") {
-		return "typescript"
-	}
-	if strings.HasSuffix(path, ".py") {
-		return "python"
-	}
-	if strings.HasSuffix(path, ".json") {
-		return "json"
-	}
-	if strings.HasSuffix(path, ".yaml") || strings.HasSuffix(path, ".yml") {
-		return "yaml"
-	}
-	if strings.HasSuffix(path, ".md") {
-		return "markdown"
-	}
-	if strings.HasSuffix(path, ".dockerfile") || strings.Contains(strings.ToLower(path), "dockerfile") {
-		return "dockerfile"
-	}
+	
 	return ""
 }
 
