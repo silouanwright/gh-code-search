@@ -40,7 +40,11 @@ ranking based on repository quality indicators.`,
   gh code-search "vite.config" --language javascript --output configs.md
 
   # Search multiple organizations
-  gh code-search "eslint.config.js" --owner microsoft --owner google`,
+  gh code-search "eslint.config.js" --owner microsoft --owner google
+  
+  # Topic-based search workflow (combine with gh search repos)
+  gh search repos --topic=react --json fullName -q '.[] | .fullName' > repos.txt
+  gh code-search "hooks" --repos $(cat repos.txt | tr '\n' ',')`,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 }

@@ -71,6 +71,10 @@ ranking based on repository quality indicators.`,
   gh code-search "next.config.js" --owner vercel --page 1 --limit 50
   gh code-search "interface" --owner google --owner facebook --language typescript
   
+  # Topic-based workflow (find repos by topic, then search code)
+  gh search repos --topic=react --stars=">1000" --json fullName | jq -r '.[].fullName' > react-repos.txt
+  gh code-search "useState" --repos $(cat react-repos.txt | tr '\n' ',')
+  
   # Multi-repository batch searches (Phase 2)
   gh code-search "docker-compose.yml" --repos microsoft/vscode,facebook/react,vercel/next.js --aggregate
   gh code-search "tsconfig.json" --orgs microsoft,google,facebook --min-stars 500 --compare
@@ -449,7 +453,7 @@ func init() {
 
 	// Core filtering flags (migrated from ghx)
 	searchCmd.Flags().StringVarP(&searchLanguage, "language", "l", "", "programming language filter")
-	searchCmd.Flags().StringSliceVarP(&searchRepo, "repo", "r", nil, "repository filter (supports wildcards)")
+	searchCmd.Flags().StringSliceVarP(&searchRepo, "repo", "r", nil, "repository filter (supports wildcards). Tip: Use 'gh search repos --topic=TOPIC' to find repos by topic first")
 	searchCmd.Flags().StringVarP(&searchFilename, "filename", "f", "", "exact filename match")
 	searchCmd.Flags().StringVarP(&searchExtension, "extension", "e", "", "file extension filter")
 	searchCmd.Flags().StringVarP(&searchPath, "path", "p", "", "file path filter")

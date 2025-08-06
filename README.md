@@ -131,6 +131,27 @@ gh code-search "prisma" --language typescript --path "**/models/**"
 gh code-search "test" --filename "*test*" --language go --min-stars 1000
 ```
 
+### Topic-Based Search Workflow
+
+Since GitHub's code search doesn't support topic filtering directly, use this two-step workflow:
+
+```bash
+# 1. Find repositories by topic using built-in gh command
+gh search repos --topic=react --stars=">1000" --json fullName > react-repos.json
+
+# 2. Extract repo names and search code across them
+cat react-repos.json | jq -r '.[].fullName' > repos.txt
+gh code-search "useState" --repos $(cat repos.txt | tr '\n' ',')
+
+# Or combine in a one-liner
+gh code-search "hooks" --repos $(gh search repos --topic=react --stars=">500" --json fullName | jq -r '.[].fullName' | tr '\n' ',')
+
+# Advanced: Multiple topics and filtering
+gh search repos --topic=typescript,react --language=typescript --stars=">2000" --json fullName | \
+  jq -r '.[].fullName' | head -20 > top-react-ts-repos.txt
+gh code-search "interface" --repos $(cat top-react-ts-repos.txt | tr '\n' ',')
+```
+
 ## ⚙️ Configuration
 
 Create `~/.gh-code-search.yaml` for custom defaults:
