@@ -2,10 +2,14 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/silouanwright/gh-search/internal/github"
+	"github.com/silouanwright/gh-search/internal/search"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +29,7 @@ var (
 	searchPage      int    // New: page-based pagination
 	contextLines    int
 	outputFormat    string
+	outputFile      string // New: export to file
 	saveAs          string
 	pipe            bool
 	minStars        int
@@ -60,6 +65,10 @@ ranking based on repository quality indicators.`,
   
   # Auto-pagination (less API efficient but convenient)
   gh search "hooks" --limit 200                  # Automatically fetches 2 pages
+
+  # Export results to files
+  gh search "config" --language json --output configs.md     # Markdown export
+  gh search "hooks" --pipe --output data.txt                 # Pipe format export
 
   # Pipe results for further processing
   gh search "react hooks" --language typescript --pipe`,
@@ -103,56 +112,45 @@ func runSearch(cmd *cobra.Command, args []string) error {
 	return outputResults(results)
 }
 
-// buildSearchQuery constructs GitHub search query from args and flags (migrated from ghx)
+// buildSearchQuery constructs GitHub search query from args and flags using QueryBuilder
 func buildSearchQuery(terms []string) string {
-	var parts []string
-
-	// Add search terms
-	if len(terms) > 0 {
-		parts = append(parts, strings.Join(terms, " "))
-	}
-
-	// Add language filter (from ghx --language)
+	// Use existing QueryBuilder to eliminate code duplication
+	qb := search.NewQueryBuilder(terms)
+	
+	// Apply all CLI flags using the QueryBuilder methods
 	if searchLanguage != "" {
-		parts = append(parts, fmt.Sprintf("language:%s", searchLanguage))
+		qb = qb.WithLanguage(searchLanguage)
 	}
-
-	// Add filename filter (from ghx --filename)
+	
 	if searchFilename != "" {
-		parts = append(parts, fmt.Sprintf("filename:%s", searchFilename))
+		qb = qb.WithFilename(searchFilename)
 	}
-
-	// Add extension filter (from ghx --extension)
+	
 	if searchExtension != "" {
-		parts = append(parts, fmt.Sprintf("extension:%s", searchExtension))
+		qb = qb.WithExtension(searchExtension)
 	}
-
-	// Add repository filters (from ghx --repo)
-	for _, repo := range searchRepo {
-		parts = append(parts, fmt.Sprintf("repo:%s", repo))
+	
+	if len(searchRepo) > 0 {
+		qb = qb.WithRepositories(searchRepo)
 	}
-
-	// Add path filter (from ghx --path)
+	
 	if searchPath != "" {
-		parts = append(parts, fmt.Sprintf("path:%s", searchPath))
+		qb = qb.WithPath(searchPath)
 	}
-
-	// Add owner filters (from ghx --owner, mapped to user:)
-	for _, owner := range searchOwner {
-		parts = append(parts, fmt.Sprintf("user:%s", owner))
+	
+	if len(searchOwner) > 0 {
+		qb = qb.WithOwners(searchOwner)
 	}
-
-	// Add size filter (from ghx --size)
+	
 	if searchSize != "" {
-		parts = append(parts, fmt.Sprintf("size:%s", searchSize))
+		qb = qb.WithSize(searchSize)
 	}
-
-	// Add stars filter (new enhancement)
+	
 	if minStars > 0 {
-		parts = append(parts, fmt.Sprintf("stars:>=%d", minStars))
+		qb = qb.WithMinStars(minStars)
 	}
-
-	return strings.Join(parts, " ")
+	
+	return qb.Build()
 }
 
 // executeSearch performs the GitHub search with optional pagination
@@ -254,76 +252,40 @@ func outputResults(results *github.SearchResults) error {
 		return nil
 	}
 
-	// For now, simple output - will be enhanced with formatters
-	if pipe {
-		return outputPipeFormat(results)
-	}
+	// Determine output destination and format
+	var output string
+	var err error
 
-	return outputDefaultFormat(results)
-}
-
-// outputPipeFormat outputs results in a pipe-friendly format
-func outputPipeFormat(results *github.SearchResults) error {
-	for _, item := range results.Items {
-		if item.Repository.FullName != nil && item.Path != nil && item.HTMLURL != nil {
-			fmt.Printf("%s:%s:%s\n", *item.Repository.FullName, *item.Path, *item.HTMLURL)
+	if pipe || outputFormat == "pipe" {
+		output, err = formatPipeResults(results)
+	} else {
+		switch outputFormat {
+		case "json":
+			output, err = formatJSONResults(results)
+		case "markdown":
+			output, err = formatMarkdownResults(results) 
+		case "compact":
+			output, err = formatCompactResults(results)
+		case "default", "":
+			output, err = formatDefaultResults(results)
+		default:
+			return fmt.Errorf("unsupported format: %s (supported: default, json, markdown, compact, pipe)", outputFormat)
 		}
 	}
+
+	if err != nil {
+		return err
+	}
+
+	// Output to file or stdout
+	if outputFile != "" {
+		return writeToFile(output, outputFile)
+	}
+
+	fmt.Print(output)
 	return nil
 }
 
-// outputDefaultFormat outputs results in the default user-friendly format
-func outputDefaultFormat(results *github.SearchResults) error {
-	if results.Total != nil {
-		fmt.Printf("🔍 Found %d results\n\n", *results.Total)
-	}
-
-	for i, item := range results.Items {
-		if i >= searchLimit {
-			break
-		}
-
-		// Repository header with stars
-		repoName := ""
-		repoURL := ""
-		stars := 0
-		if item.Repository.FullName != nil {
-			repoName = *item.Repository.FullName
-		}
-		if item.Repository.HTMLURL != nil {
-			repoURL = *item.Repository.HTMLURL
-		}
-		if item.Repository.StargazersCount != nil {
-			stars = *item.Repository.StargazersCount
-		}
-
-		fmt.Printf("📁 [%s](%s) ⭐ %d\n", repoName, repoURL, stars)
-
-		// File path
-		if item.Path != nil {
-			fmt.Printf("📄 **%s**\n\n", *item.Path)
-		}
-
-		// Code content with basic formatting
-		if len(item.TextMatches) > 0 {
-			for _, match := range item.TextMatches {
-				if match.Fragment != nil {
-					lang := detectLanguage(*item.Path)
-					fmt.Printf("```%s\n%s\n```\n", lang, *match.Fragment)
-				}
-			}
-		}
-
-		// Link to file
-		if item.HTMLURL != nil {
-			fmt.Printf("🔗 [View on GitHub](%s)\n\n", *item.HTMLURL)
-		}
-
-		fmt.Println("---")
-	}
-
-	return nil
-}
 
 // detectLanguage detects programming language from file path
 func detectLanguage(path string) string {
@@ -357,6 +319,93 @@ func detectLanguage(path string) string {
 	return ""
 }
 
+// formatPipeResults formats results for pipe output
+func formatPipeResults(results *github.SearchResults) (string, error) {
+	var output strings.Builder
+	
+	for _, item := range results.Items {
+		if item.Repository.FullName != nil && item.Path != nil && item.HTMLURL != nil {
+			output.WriteString(fmt.Sprintf("%s:%s:%s\n", *item.Repository.FullName, *item.Path, *item.HTMLURL))
+		}
+	}
+	
+	return output.String(), nil
+}
+
+// formatDefaultResults formats results for default output
+func formatDefaultResults(results *github.SearchResults) (string, error) {
+	var output strings.Builder
+	
+	if results.Total != nil {
+		output.WriteString(fmt.Sprintf("🔍 Found %d results\n\n", *results.Total))
+	}
+
+	for i, item := range results.Items {
+		if i >= searchLimit {
+			break
+		}
+
+		// Repository header with stars
+		repoName := ""
+		repoURL := ""
+		stars := 0
+		if item.Repository.FullName != nil {
+			repoName = *item.Repository.FullName
+		}
+		if item.Repository.HTMLURL != nil {
+			repoURL = *item.Repository.HTMLURL
+		}
+		if item.Repository.StargazersCount != nil {
+			stars = *item.Repository.StargazersCount
+		}
+
+		output.WriteString(fmt.Sprintf("📁 [%s](%s) ⭐ %d\n", repoName, repoURL, stars))
+
+		// File path
+		if item.Path != nil {
+			output.WriteString(fmt.Sprintf("📄 **%s**\n\n", *item.Path))
+		}
+
+		// Code content with basic formatting
+		if len(item.TextMatches) > 0 {
+			for _, match := range item.TextMatches {
+				if match.Fragment != nil {
+					lang := detectLanguage(*item.Path)
+					output.WriteString(fmt.Sprintf("```%s\n%s\n```\n", lang, *match.Fragment))
+				}
+			}
+		}
+
+		// Link to file
+		if item.HTMLURL != nil {
+			output.WriteString(fmt.Sprintf("🔗 [View on GitHub](%s)\n\n", *item.HTMLURL))
+		}
+
+		output.WriteString("---\n")
+	}
+
+	return output.String(), nil
+}
+
+// writeToFile writes content to a file
+func writeToFile(content, filename string) error {
+	// Create directory if it doesn't exist
+	dir := filepath.Dir(filename)
+	if dir != "." {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", dir, err)
+		}
+	}
+
+	// Write file
+	if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
+		return fmt.Errorf("failed to write to file %s: %w", filename, err)
+	}
+
+	fmt.Printf("✅ Results exported to: %s\n", filename)
+	return nil
+}
+
 // createGitHubClient creates a new GitHub API client
 func createGitHubClient() (github.GitHubAPI, error) {
 	return github.NewRealClient()
@@ -383,12 +432,14 @@ func init() {
 	// Output control flags (migrated from ghx)
 	searchCmd.Flags().IntVar(&searchLimit, "limit", 50, "maximum results per page (default: 50, max: 100)")
 	searchCmd.Flags().IntVar(&searchPage, "page", 0, "specific page number (more API efficient than auto-pagination)")
-	searchCmd.Flags().IntVar(&contextLines, "context", 20, "context lines around matches")
+	searchCmd.Flags().IntVar(&contextLines, "context", 20, "context lines around matches (GitHub API controls actual fragment size)")
 	searchCmd.Flags().StringVar(&outputFormat, "format", "default", "output format: default, json, markdown, compact")
+	searchCmd.Flags().StringVar(&outputFile, "output", "", "export results to file (e.g., results.md, data.json)")
 	searchCmd.Flags().BoolVarP(&pipe, "pipe", "", false, "output to stdout (for piping to other tools)")
 
 	// Workflow integration flags (new)
-	searchCmd.Flags().StringVar(&saveAs, "save", "", "save search with given name")
+	// TODO: Implement saved searches functionality
+	// searchCmd.Flags().StringVar(&saveAs, "save", "", "save search with given name")
 
 	// Set flag usage examples
 	searchCmd.Flags().SetAnnotation("language", "examples", []string{"typescript", "go", "python", "javascript"})
@@ -396,4 +447,82 @@ func init() {
 	searchCmd.Flags().SetAnnotation("filename", "examples", []string{"package.json", "tsconfig.json", "Dockerfile"})
 	searchCmd.Flags().SetAnnotation("extension", "examples", []string{"ts", "go", "py", "js"})
 	searchCmd.Flags().SetAnnotation("size", "examples", []string{">1000", "<500", "100..200"})
+}
+
+// formatJSONResults formats search results as JSON
+func formatJSONResults(results *github.SearchResults) (string, error) {
+	data, err := json.MarshalIndent(results, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+	return string(data), nil
+}
+
+// formatMarkdownResults formats search results as Markdown
+func formatMarkdownResults(results *github.SearchResults) (string, error) {
+	var builder strings.Builder
+	
+	if results.Total != nil {
+		builder.WriteString(fmt.Sprintf("# Search Results (%d total)\n\n", *results.Total))
+	} else {
+		builder.WriteString("# Search Results\n\n")
+	}
+	
+	for i, item := range results.Items {
+		path := ""
+		if item.Path != nil {
+			path = *item.Path
+		}
+		fullName := ""
+		if item.Repository.FullName != nil {
+			fullName = *item.Repository.FullName
+		}
+		htmlURL := ""
+		if item.HTMLURL != nil {
+			htmlURL = *item.HTMLURL
+		}
+		
+		builder.WriteString(fmt.Sprintf("## %d. %s\n\n", i+1, path))
+		builder.WriteString(fmt.Sprintf("**Repository:** %s\n", fullName))
+		if item.Repository.Description != nil && *item.Repository.Description != "" {
+			builder.WriteString(fmt.Sprintf("**Description:** %s\n", *item.Repository.Description))
+		}
+		builder.WriteString(fmt.Sprintf("**URL:** %s\n\n", htmlURL))
+		
+		if len(item.TextMatches) > 0 {
+			builder.WriteString("**Code:**\n\n```")
+			if item.Repository.Language != nil && *item.Repository.Language != "" {
+				builder.WriteString(strings.ToLower(*item.Repository.Language))
+			}
+			builder.WriteString("\n")
+			for _, match := range item.TextMatches {
+				if match.Fragment != nil {
+					builder.WriteString(*match.Fragment + "\n")
+				}
+			}
+			builder.WriteString("```\n\n")
+		}
+		builder.WriteString("---\n\n")
+	}
+	
+	return builder.String(), nil
+}
+
+// formatCompactResults formats search results in compact format
+func formatCompactResults(results *github.SearchResults) (string, error) {
+	var builder strings.Builder
+	
+	for _, item := range results.Items {
+		fullName := ""
+		if item.Repository.FullName != nil {
+			fullName = *item.Repository.FullName
+		}
+		path := ""
+		if item.Path != nil {
+			path = *item.Path
+		}
+		builder.WriteString(fmt.Sprintf("%s:%s\n", fullName, path))
+	}
+	
+	return builder.String(), nil
 }
