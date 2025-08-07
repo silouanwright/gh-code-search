@@ -36,3 +36,6 @@ Thumbs.db
 # Test coverage
 coverage.out
 coverage.html
+
+# Binary
+gh-code-search

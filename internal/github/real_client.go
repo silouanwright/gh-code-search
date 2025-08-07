@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -63,7 +64,15 @@ func (c *RealClient) SearchCode(ctx context.Context, query string, opts *SearchO
 	}
 
 	// Convert the result to our format
-	return convertSearchResults(result), nil
+	searchResults := convertSearchResults(result)
+	
+	// Enrich repository metadata if star counts are missing (Code Search API limitation)
+	// This is optional and can be disabled via environment variable
+	if os.Getenv("GH_CODE_SEARCH_DISABLE_REPO_ENRICHMENT") == "" {
+		c.enrichRepositoryMetadata(ctx, searchResults)
+	}
+
+	return searchResults, nil
 }
 
 // GetFileContent implements GitHubAPI.GetFileContent
@@ -232,6 +241,16 @@ func convertRepository(repo *github.Repository) Repository {
 		pushedAt = &repo.PushedAt.Time
 	}
 
+	// Handle star count conversion - GitHub Code Search API sometimes doesn't include star counts
+	// This is a known limitation of the Code Search API vs Repository Search API
+	var starCount *int
+	if repo.StargazersCount != nil {
+		starCount = repo.StargazersCount
+	} else {
+		// Star count will be enriched later via repository enrichment if enabled
+		starCount = nil
+	}
+
 	return Repository{
 		ID:              repo.ID,
 		NodeID:          repo.NodeID,
@@ -245,7 +264,7 @@ func convertRepository(repo *github.Repository) Repository {
 		CreatedAt:       createdAt,
 		UpdatedAt:       updatedAt,
 		PushedAt:        pushedAt,
-		StargazersCount: repo.StargazersCount,
+		StargazersCount: starCount,
 		WatchersCount:   repo.WatchersCount,
 		ForksCount:      repo.ForksCount,
 		Language:        repo.Language,
@@ -295,6 +314,87 @@ type RateLimitError struct {
 
 func (e *RateLimitError) Error() string {
 	return e.Message
+}
+
+// getStringFromPtr safely gets string value from pointer, returns empty string if nil
+func getStringFromPtr(ptr *string) string {
+	if ptr == nil {
+		return ""
+	}
+	return *ptr
+}
+
+// enrichRepositoryMetadata fetches missing repository metadata (like star counts) 
+// that are not included in Code Search API responses
+func (c *RealClient) enrichRepositoryMetadata(ctx context.Context, results *SearchResults) {
+	if results == nil || len(results.Items) == 0 {
+		return
+	}
+
+	// Collect unique repositories that need metadata enrichment
+	reposToEnrich := make(map[string]*Repository)
+	for i := range results.Items {
+		repo := &results.Items[i].Repository
+		if repo.StargazersCount == nil && repo.FullName != nil {
+			reposToEnrich[*repo.FullName] = repo
+		}
+	}
+
+	if len(reposToEnrich) == 0 {
+		return
+	}
+
+	// Limit the number of additional API calls to prevent rate limit issues
+	maxEnrichments := 10
+	if len(reposToEnrich) > maxEnrichments && os.Getenv("GITHUB_CLIENT_DEBUG") != "" {
+		fmt.Printf("[DEBUG] Limiting repository enrichment to %d out of %d unique repositories\n", 
+			maxEnrichments, len(reposToEnrich))
+	}
+
+	count := 0
+	for fullName, repo := range reposToEnrich {
+		if count >= maxEnrichments {
+			break
+		}
+		
+		// Parse owner/repo from full name
+		parts := strings.SplitN(fullName, "/", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		owner, repoName := parts[0], parts[1]
+
+		// Fetch repository metadata
+		if repoData, _, err := c.client.Repositories.Get(ctx, owner, repoName); err == nil {
+			// Update the repository with fetched metadata
+			if repoData.StargazersCount != nil {
+				repo.StargazersCount = repoData.StargazersCount
+			}
+			if repoData.ForksCount != nil {
+				repo.ForksCount = repoData.ForksCount
+			}
+			if repoData.WatchersCount != nil {
+				repo.WatchersCount = repoData.WatchersCount
+			}
+			
+			if os.Getenv("GITHUB_CLIENT_DEBUG") != "" {
+				stars := 0
+				if repo.StargazersCount != nil {
+					stars = *repo.StargazersCount
+				}
+				fmt.Printf("[DEBUG] Enriched %s with %d stars from Repository API\n", fullName, stars)
+			}
+		} else if os.Getenv("GITHUB_CLIENT_DEBUG") != "" {
+			fmt.Printf("[DEBUG] Failed to enrich %s: %v\n", fullName, err)
+		}
+		
+		count++
+		
+		// Small delay to be respectful of API limits
+		if count < len(reposToEnrich) && count < maxEnrichments {
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
 }
 
 // AbuseRateLimitError represents a GitHub API abuse detection error

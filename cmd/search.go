@@ -372,8 +372,42 @@ func formatPipeResults(results *github.SearchResults) (string, error) {
 func formatDefaultResults(results *github.SearchResults) (string, error) {
 	var output strings.Builder
 	
+	// Show pagination-aware results summary
 	if results.Total != nil {
-		output.WriteString(fmt.Sprintf("🔍 Found %d results\n\n", *results.Total))
+		totalResults := *results.Total
+		displayedCount := len(results.Items)
+		
+		// Calculate result range based on pagination
+		var startResult, endResult int
+		if searchPage > 0 {
+			// Single page mode - calculate exact range
+			startResult = ((searchPage - 1) * searchLimit) + 1
+			endResult = startResult + displayedCount - 1
+		} else {
+			// Auto pagination mode (legacy)
+			startResult = 1
+			endResult = displayedCount
+		}
+		
+		// Format the pagination-aware header
+		if totalResults > displayedCount {
+			output.WriteString(fmt.Sprintf("🔍 Found %d total results (showing %d-%d)\n\n", 
+				totalResults, startResult, endResult))
+		} else {
+			output.WriteString(fmt.Sprintf("🔍 Found %d results\n\n", totalResults))
+		}
+		
+		// Add pagination guidance if there are more results
+		if totalResults > endResult {
+			remainingResults := totalResults - endResult
+			nextPage := searchPage + 1
+			if searchPage == 0 {
+				nextPage = 2 // Auto pagination starts at page 1, next is page 2
+			}
+			
+			output.WriteString(fmt.Sprintf("💡 **%d more results available** - Use `--page %d` to see results %d-%d\n\n", 
+				remainingResults, nextPage, endResult+1, min(totalResults, endResult+searchLimit)))
+		}
 	}
 
 	for i, item := range results.Items {
@@ -493,9 +527,46 @@ func init() {
 	searchCmd.Flags().SetAnnotation("orgs", "examples", []string{"microsoft,google,facebook", "vercel,netlify"})
 }
 
-// formatJSONResults formats search results as JSON
+// formatJSONResults formats search results as JSON with pagination metadata
 func formatJSONResults(results *github.SearchResults) (string, error) {
-	data, err := json.MarshalIndent(results, "", "  ")
+	// Create enhanced response with pagination info
+	enhancedResults := struct {
+		*github.SearchResults
+		Pagination *PaginationInfo `json:"pagination,omitempty"`
+	}{
+		SearchResults: results,
+	}
+	
+	// Add pagination metadata if available
+	if results.Total != nil {
+		totalResults := *results.Total
+		displayedCount := len(results.Items)
+		
+		var startResult, endResult int
+		if searchPage > 0 {
+			startResult = ((searchPage - 1) * searchLimit) + 1
+			endResult = startResult + displayedCount - 1
+		} else {
+			startResult = 1
+			endResult = displayedCount
+		}
+		
+		enhancedResults.Pagination = &PaginationInfo{
+			TotalResults:     totalResults,
+			DisplayedResults: displayedCount,
+			StartResult:      startResult,
+			EndResult:        endResult,
+			CurrentPage:      max(1, searchPage),
+			PerPage:          searchLimit,
+			HasNextPage:      totalResults > endResult,
+		}
+		
+		if enhancedResults.Pagination.HasNextPage {
+			enhancedResults.Pagination.NextPage = enhancedResults.Pagination.CurrentPage + 1
+		}
+	}
+	
+	data, err := json.MarshalIndent(enhancedResults, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal JSON: %w", err)
 	}
@@ -555,6 +626,24 @@ func formatMarkdownResults(results *github.SearchResults) (string, error) {
 // formatCompactResults formats search results in compact format
 func formatCompactResults(results *github.SearchResults) (string, error) {
 	var builder strings.Builder
+	
+	// Add pagination info for compact format too
+	if results.Total != nil {
+		totalResults := *results.Total
+		displayedCount := len(results.Items)
+		
+		if searchPage > 0 {
+			startResult := ((searchPage - 1) * searchLimit) + 1
+			endResult := startResult + displayedCount - 1
+			if totalResults > displayedCount {
+				builder.WriteString(fmt.Sprintf("# Results %d-%d of %d total\n", 
+					startResult, endResult, totalResults))
+			}
+		} else if totalResults > displayedCount {
+			builder.WriteString(fmt.Sprintf("# Results 1-%d of %d total\n", 
+				displayedCount, totalResults))
+		}
+	}
 	
 	for _, item := range results.Items {
 		fullName := ""
@@ -744,4 +833,32 @@ func outputBatchComparison(results *github.SearchResults, repos []string) error 
 	fmt.Printf("- **Average results per repository**: %.1f\n", float64(len(results.Items))/float64(len(repoResults)))
 	
 	return nil
+}
+
+// min returns the smaller of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// max returns the larger of two integers
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// PaginationInfo contains metadata about pagination
+type PaginationInfo struct {
+	TotalResults     int  `json:"total_results"`
+	DisplayedResults int  `json:"displayed_results"`
+	StartResult      int  `json:"start_result"`
+	EndResult        int  `json:"end_result"`
+	CurrentPage      int  `json:"current_page"`
+	PerPage          int  `json:"per_page"`
+	HasNextPage      bool `json:"has_next_page"`
+	NextPage         int  `json:"next_page,omitempty"`
 }
