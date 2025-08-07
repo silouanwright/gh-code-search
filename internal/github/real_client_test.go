@@ -23,7 +23,7 @@ func TestNewRealClient(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client, err := NewRealClient()
-			
+
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, client)
@@ -58,7 +58,7 @@ func TestNewRealClientWithToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client := NewRealClientWithToken(tt.token)
-			
+
 			assert.NotNil(t, client)
 			assert.NotNil(t, client.client)
 		})
@@ -93,7 +93,7 @@ func TestRealClient_SearchCode_Integration(t *testing.T) {
 		},
 		{
 			name:  "specific repository search",
-			query: "README.md repo:github/hub",
+			query: "README repo:facebook/react",
 			opts: &SearchOptions{
 				ListOptions: ListOptions{
 					Page:    1,
@@ -134,7 +134,7 @@ func TestRealClient_SearchCode_Integration(t *testing.T) {
 				assert.NotNil(t, results.Total)
 				assert.True(t, *results.Total > 0, "Should find at least some results")
 				assert.True(t, len(results.Items) > 0, "Should return at least some items")
-				
+
 				// Verify structure of first item if available
 				if len(results.Items) > 0 {
 					item := results.Items[0]
@@ -238,7 +238,7 @@ func TestErrorHandling(t *testing.T) {
 		},
 		{
 			name:      "abuse rate limit error type",
-			errorType: "AbuseRateLimitError", 
+			errorType: "AbuseRateLimitError",
 			check: func(err error) bool {
 				_, ok := err.(*AbuseRateLimitError)
 				return ok

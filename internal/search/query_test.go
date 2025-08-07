@@ -92,7 +92,7 @@ func TestQueryBuilder_Build(t *testing.T) {
 			expectedParts := strings.Fields(tt.expected)
 			resultParts := strings.Fields(result)
 
-			assert.ElementsMatch(t, expectedParts, resultParts, 
+			assert.ElementsMatch(t, expectedParts, resultParts,
 				"Query parts should match regardless of order. Got: %s, Expected: %s", result, tt.expected)
 		})
 	}
@@ -114,7 +114,7 @@ func TestQueryBuilder_ChainableMethods(t *testing.T) {
 		WithMatch([]string{"file"})
 
 	assert.NotNil(t, qb)
-	
+
 	query := qb.Build()
 	assert.Contains(t, query, "test")
 	assert.Contains(t, query, "language:go")
@@ -134,7 +134,7 @@ func TestNewQueryBuilderFromFilters(t *testing.T) {
 	filters := SearchFilters{
 		Language:   "typescript",
 		Filename:   "*.tsx",
-		Extension:  "tsx", 
+		Extension:  "tsx",
 		Repository: []string{"facebook/react"},
 		Path:       "src/",
 		Owner:      []string{"facebook"},

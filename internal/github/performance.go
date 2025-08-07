@@ -82,7 +82,7 @@ func (pt *PerformanceTracker) EndSearch(resultCount int, err error) {
 	if err != nil {
 		pt.currentSearch.ErrorType = classifyError(err)
 		pt.metrics.FailedSearches++
-		
+
 		// Track specific error types
 		switch pt.currentSearch.ErrorType {
 		case "rate_limit":
@@ -121,7 +121,7 @@ func (pt *PerformanceTracker) RecordDelay(delay time.Duration) {
 func (pt *PerformanceTracker) EndBatch() {
 	pt.metrics.EndTime = time.Now()
 	pt.metrics.TotalDuration = pt.metrics.EndTime.Sub(pt.metrics.StartTime)
-	
+
 	// Calculate average response time (excluding delays)
 	if pt.metrics.SuccessfulSearches > 0 {
 		totalResponseTime := time.Duration(0)
@@ -214,7 +214,7 @@ func (pt *PerformanceTracker) GenerateReport() string {
 
 	// Add recommendations
 	report += "\n\n💡 **Recommendations**:"
-	
+
 	if m.DelayTime > m.TotalDuration/2 {
 		report += "\n  • Consider optimizing delays - they account for most of the execution time"
 	}
@@ -234,36 +234,36 @@ func (pt *PerformanceTracker) GenerateReport() string {
 // GenerateDetailedReport includes individual search metrics
 func (pt *PerformanceTracker) GenerateDetailedReport() string {
 	report := pt.GenerateReport()
-	
+
 	if len(pt.searchMetrics) > 0 {
 		report += "\n\n📋 **Individual Search Performance**:\n"
-		
+
 		for i, search := range pt.searchMetrics {
 			status := "✅"
 			if !search.Success {
 				status = "❌"
 			}
-			
+
 			report += fmt.Sprintf("  %d. %s %s\n", i+1, status, search.SearchName)
-			report += fmt.Sprintf("     Duration: %s | Results: %d", 
+			report += fmt.Sprintf("     Duration: %s | Results: %d",
 				search.Duration, search.ResultCount)
-			
+
 			if search.RetryCount > 0 {
 				report += fmt.Sprintf(" | Retries: %d", search.RetryCount)
 			}
-			
+
 			if search.DelayTime > 0 {
 				report += fmt.Sprintf(" | Delays: %s", search.DelayTime)
 			}
-			
+
 			if !search.Success {
 				report += fmt.Sprintf(" | Error: %s", search.ErrorType)
 			}
-			
+
 			report += "\n"
 		}
 	}
-	
+
 	return report
 }
 
@@ -276,27 +276,27 @@ func classifyError(err error) string {
 	}
 
 	errStr := err.Error()
-	
+
 	if _, ok := err.(*RateLimitError); ok {
 		return "rate_limit"
 	}
-	
+
 	if _, ok := err.(*AbuseRateLimitError); ok {
 		return "abuse_detection"
 	}
-	
+
 	if _, ok := err.(*AuthenticationError); ok {
 		return "authentication"
 	}
-	
+
 	if _, ok := err.(*AuthorizationError); ok {
 		return "authorization"
 	}
-	
+
 	if _, ok := err.(*NotFoundError); ok {
 		return "not_found"
 	}
-	
+
 	if _, ok := err.(*ValidationError); ok {
 		return "validation"
 	}

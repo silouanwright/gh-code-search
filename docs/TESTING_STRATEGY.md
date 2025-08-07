@@ -1,8 +1,8 @@
 # gh-code-search Testing Strategy
 
-**Target**: 85%+ test coverage (matching gh-comment's excellence)  
-**Approach**: Mock-first, table-driven, comprehensive error testing  
-**Tools**: Go testing, testify, testscript for integration  
+**Target**: 85%+ test coverage (matching gh-comment's excellence)
+**Approach**: Mock-first, table-driven, comprehensive error testing
+**Tools**: Go testing, testify, testscript for integration
 
 ## 🎯 **Testing Philosophy (From gh-comment)**
 
@@ -21,7 +21,7 @@
 ```
 test coverage by package:
 ├── cmd/                    # 85%+ target (command logic)
-├── internal/github/        # 80%+ target (API integration)  
+├── internal/github/        # 80%+ target (API integration)
 ├── internal/search/        # 90%+ target (core search logic)
 ├── internal/analysis/      # 85%+ target (pattern analysis)
 ├── internal/config/        # 95%+ target (configuration)
@@ -71,7 +71,7 @@ func TestBuildSearchQuery(t *testing.T) {
             expected: "vite config language:typescript filename:vite.config.ts extension:ts path:src/",
         },
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             result := buildSearchQuery(tt.args, tt.flags)
@@ -125,19 +125,19 @@ func (m *MockClient) SetError(method string, err error) {
 // API implementation with logging
 func (m *MockClient) SearchCode(ctx context.Context, query string, opts *SearchOptions) (*SearchResults, error) {
     m.logCall("SearchCode", query, opts)
-    
+
     if err, exists := m.Errors["SearchCode"]; exists {
         return nil, err
     }
-    
+
     if m.ResponseDelay > 0 {
         time.Sleep(m.ResponseDelay)
     }
-    
+
     if results, exists := m.SearchResults[query]; exists {
         return results, nil
     }
-    
+
     // Default empty results
     return &SearchResults{TotalCount: 0, Items: []SearchItem{}}, nil
 }
@@ -251,54 +251,54 @@ func TestSearchCommandExecution(t *testing.T) {
         },
         // More comprehensive test scenarios...
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             // Save original state
             originalClient := searchClient
             originalLimit := searchLimit
             originalLanguage := searchLanguage
-            
+
             // Set up test environment
             mockClient := github.NewMockClient()
             if tt.setupMock != nil {
                 tt.setupMock(mockClient)
             }
             searchClient = mockClient
-            
+
             if tt.setupGlobals != nil {
                 tt.setupGlobals()
             }
-            
+
             // Restore state after test
             defer func() {
                 searchClient = originalClient
                 searchLimit = originalLimit
                 searchLanguage = originalLanguage
             }()
-            
+
             // Capture output
             var buf bytes.Buffer
             cmd := searchCmd
             cmd.SetOut(&buf)
             cmd.SetErr(&buf)
             cmd.SetArgs(tt.args)
-            
+
             // Execute command
             err := cmd.Execute()
             output := buf.String()
-            
+
             // Verify results
             if tt.wantErr {
                 assert.Error(t, err)
             } else {
                 assert.NoError(t, err)
             }
-            
+
             for _, expected := range tt.expectedOutput {
                 assert.Contains(t, output, expected, "Output should contain: %s", expected)
             }
-            
+
             if tt.verifyMock != nil {
                 tt.verifyMock(t, mockClient)
             }
@@ -342,7 +342,7 @@ func TestHandleSearchError(t *testing.T) {
             },
             expectedSugges: []string{
                 "exact phrases",
-                "Boolean operators", 
+                "Boolean operators",
                 "Examples:",
             },
         },
@@ -375,24 +375,24 @@ func TestHandleSearchError(t *testing.T) {
             },
         },
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             result := handleSearchError(tt.inputError, tt.query)
-            
+
             assert.Error(t, result)
             errorMsg := result.Error()
-            
+
             // Verify error message contains expected content
             for _, expected := range tt.expectedMessage {
                 assert.Contains(t, errorMsg, expected)
             }
-            
+
             // Verify helpful suggestions are included
             for _, suggestion := range tt.expectedSugges {
                 assert.Contains(t, errorMsg, suggestion)
             }
-            
+
             // Verify error maintains original context
             assert.Contains(t, errorMsg, tt.inputError.Error())
         })
@@ -438,7 +438,7 @@ stdout 'Would search: tsconfig.json language:json'
 [has-gh] stdout '"total_count":'
 [has-gh] stdout '"repository":'
 
-# testdata/scripts/saved_searches.txtar  
+# testdata/scripts/saved_searches.txtar
 # Test saved search workflow
 > gh code-search save "react-configs" "tsconfig.json" --repo "*react*" --language json
 stdout 'Saved search: react-configs'
@@ -469,9 +469,9 @@ func BenchmarkSearchExecution(b *testing.B) {
         TotalCount: 100,
         Items:      generateBenchmarkResults(100),
     })
-    
+
     searchClient = mockClient
-    
+
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
         err := executeSearch(context.Background(), "benchmark-query")
@@ -484,7 +484,7 @@ func BenchmarkSearchExecution(b *testing.B) {
 func BenchmarkPatternAnalysis(b *testing.B) {
     results := generateBenchmarkResults(1000)
     analyzer := analysis.NewPatternAnalyzer(results)
-    
+
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
         _, err := analyzer.AnalyzeConfigPatterns()
@@ -496,7 +496,7 @@ func BenchmarkPatternAnalysis(b *testing.B) {
 
 func BenchmarkLargeResultProcessing(b *testing.B) {
     results := generateBenchmarkResults(5000)
-    
+
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
         err := processSearchResults(results, "markdown")
@@ -523,7 +523,7 @@ func TestMarkdownFormatter(t *testing.T) {
                 Items: []github.SearchItem{
                     {
                         Name: "tsconfig.json",
-                        Path: "tsconfig.json", 
+                        Path: "tsconfig.json",
                         Repository: github.Repository{
                             FullName: "facebook/react",
                             HTMLURL:  "https://github.com/facebook/react",
@@ -537,13 +537,13 @@ func TestMarkdownFormatter(t *testing.T) {
             goldenFile: "basic_search_results.md",
         },
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             formatter := output.NewMarkdownFormatter()
             result, err := formatter.Format(tt.results)
             require.NoError(t, err)
-            
+
             golden := testutil.LoadGoldenFile(t, tt.goldenFile)
             testutil.AssertGoldenMatch(t, golden, result, tt.goldenFile)
         })
@@ -555,7 +555,7 @@ func TestMarkdownFormatter(t *testing.T) {
 
 ### **Package Coverage Requirements**
 ```bash
-cmd/                85%+  # Command implementations  
+cmd/                85%+  # Command implementations
 internal/github/    80%+  # API integration
 internal/search/    90%+  # Core search logic
 internal/analysis/  85%+  # Pattern analysis
@@ -584,7 +584,7 @@ echo "✅ All coverage targets met"
 
 ### **1. Error Path Testing (Essential for UX)**
 - Rate limiting scenarios with helpful recovery suggestions
-- Authentication failures with clear resolution steps  
+- Authentication failures with clear resolution steps
 - Network issues with troubleshooting guidance
 - Invalid query syntax with corrected examples
 - No results scenarios with alternative approaches

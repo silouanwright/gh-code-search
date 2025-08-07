@@ -1,8 +1,8 @@
 # gh-code-search Migration Guide
 
-**From**: ghx TypeScript monolith  
-**To**: gh-code-search Go CLI extension with gh-comment's proven patterns  
-**Goal**: Professional-grade GitHub search with 85%+ test coverage  
+**From**: ghx TypeScript monolith
+**To**: gh-code-search Go CLI extension with gh-comment's proven patterns
+**Goal**: Professional-grade GitHub search with 85%+ test coverage
 
 ## 🔄 **Migration Overview**
 
@@ -94,7 +94,7 @@ var rootCmd = &cobra.Command{
     Use:   "gh-code-search",
     Short: "GitHub code search with intelligent filtering and analysis",
     Long: `Search GitHub's vast codebase to find working examples and configurations.
-    
+
 Perfect for discovering real-world usage patterns, configuration examples,
 and best practices across millions of repositories.`,
 }
@@ -116,7 +116,7 @@ func init() {
 // cmd/search.go - Convert from ghx's main functionality
 var (
     searchClient github.GitHubAPI
-    
+
     // Flags migrated from ghx
     searchLanguage  string
     searchRepo      []string
@@ -147,16 +147,16 @@ func runSearch(cmd *cobra.Command, args []string) error {
         }
         searchClient = client
     }
-    
+
     // Build query from args and flags (migrate ghx logic)
     query := buildSearchQuery(args)
-    
+
     // Execute search with gh-comment style error handling
     results, err := executeSearch(cmd.Context(), query)
     if err != nil {
         return handleSearchError(err, query)
     }
-    
+
     // Process and output results
     return outputResults(results)
 }
@@ -174,7 +174,7 @@ func init() {
     searchCmd.Flags().IntVar(&contextLines, "context", 20, "context lines around matches")
     searchCmd.Flags().StringVar(&outputFormat, "format", "default", "output format")
     searchCmd.Flags().StringVar(&saveAs, "save", "", "save search with name")
-    
+
     rootCmd.AddCommand(searchCmd)
 }
 ```
@@ -186,47 +186,47 @@ func init() {
 // internal/search/query.go - Migrate ghx's query building logic
 func buildSearchQuery(terms []string) string {
     var parts []string
-    
+
     // Add search terms
     if len(terms) > 0 {
         parts = append(parts, strings.Join(terms, " "))
     }
-    
+
     // Add language filter (from ghx --language)
     if searchLanguage != "" {
         parts = append(parts, fmt.Sprintf("language:%s", searchLanguage))
     }
-    
+
     // Add filename filter (from ghx --filename)
     if searchFilename != "" {
         parts = append(parts, fmt.Sprintf("filename:%s", searchFilename))
     }
-    
+
     // Add extension filter (from ghx --extension)
     if searchExtension != "" {
         parts = append(parts, fmt.Sprintf("extension:%s", searchExtension))
     }
-    
+
     // Add repository filters (from ghx --repo)
     for _, repo := range searchRepo {
         parts = append(parts, fmt.Sprintf("repo:%s", repo))
     }
-    
+
     // Add path filter (from ghx --path)
     if searchPath != "" {
         parts = append(parts, fmt.Sprintf("path:%s", searchPath))
     }
-    
+
     // Add owner filters (from ghx --owner)
     for _, owner := range searchOwner {
         parts = append(parts, fmt.Sprintf("user:%s", owner))
     }
-    
+
     // Add size filter (from ghx --size)
     if searchSize != "" {
         parts = append(parts, fmt.Sprintf("size:%s", searchSize))
     }
-    
+
     return strings.Join(parts, " ")
 }
 ```
@@ -253,13 +253,13 @@ func (c *RealClient) SearchCode(ctx context.Context, query string, opts *SearchO
         Order:       opts.Order,
         ListOptions: github.ListOptions{Page: opts.ListOptions.Page, PerPage: opts.ListOptions.PerPage},
     }
-    
+
     // Execute search
     result, resp, err := c.client.Search.Code(ctx, query, searchOpts)
     if err != nil {
         return nil, formatGitHubError(err, resp)
     }
-    
+
     // Convert results
     return convertSearchResults(result), nil
 }
@@ -279,15 +279,15 @@ type MockClient struct {
 
 func (m *MockClient) SearchCode(ctx context.Context, query string, opts *SearchOptions) (*SearchResults, error) {
     m.logCall("SearchCode", query, opts)
-    
+
     if err, exists := m.Errors["SearchCode"]; exists {
         return nil, err
     }
-    
+
     if results, exists := m.SearchResults[query]; exists {
         return results, nil
     }
-    
+
     return &SearchResults{Total: intPtr(0), Items: []SearchItem{}}, nil
 }
 ```
@@ -310,7 +310,7 @@ func TestSearchCommand(t *testing.T) {
             setupMock: func(mock *github.MockClient) {
                 searchCmd.Flags().Set("filename", "tsconfig.json")
                 searchCmd.Flags().Set("limit", "2")
-                
+
                 mock.SetSearchResults("strict filename:tsconfig.json", &github.SearchResults{
                     Total: intPtr(2),
                     Items: []github.SearchItem{
@@ -338,7 +338,7 @@ func TestSearchCommand(t *testing.T) {
                 searchCmd.Flags().Set("language", "typescript")
                 searchCmd.Flags().Set("extension", "tsx")
                 searchCmd.Flags().Set("limit", "1")
-                
+
                 mock.SetSearchResults("useState language:typescript extension:tsx", &github.SearchResults{
                     Total: intPtr(1),
                     Items: []github.SearchItem{
@@ -356,7 +356,7 @@ func TestSearchCommand(t *testing.T) {
         },
         // Convert all ghx tests to table-driven format...
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             // Set up mock client
@@ -367,21 +367,21 @@ func TestSearchCommand(t *testing.T) {
             }
             searchClient = mockClient
             defer func() { searchClient = originalClient }()
-            
+
             // Execute command
             output, err := executeCommand(tt.args)
-            
+
             // Verify results
             if tt.wantErr {
                 assert.Error(t, err)
             } else {
                 assert.NoError(t, err)
             }
-            
+
             if tt.expectedOutput != "" {
                 assert.Contains(t, output, tt.expectedOutput)
             }
-            
+
             // Verify correct API calls
             calls := mockClient.GetCallLog()
             assert.Len(t, calls, 1)
@@ -408,14 +408,14 @@ func runPatterns(cmd *cobra.Command, args []string) error {
     if err != nil {
         return err
     }
-    
+
     // Analyze patterns
     analyzer := analysis.NewPatternAnalyzer(results.Items)
     patterns, err := analyzer.AnalyzeConfigPatterns()
     if err != nil {
         return fmt.Errorf("pattern analysis failed: %w", err)
     }
-    
+
     // Output patterns
     return outputPatterns(patterns)
 }
@@ -441,15 +441,15 @@ func runSavedSearch(cmd *cobra.Command, args []string) error {
     if err != nil {
         return err
     }
-    
+
     savedSearch, exists := cfg.SavedSearches[args[0]]
     if !exists {
         return fmt.Errorf("saved search '%s' not found", args[0])
     }
-    
+
     // Apply saved search parameters
     applySearchFilters(savedSearch.Filters)
-    
+
     // Execute search
     return runSearch(cmd, []string{savedSearch.Query})
 }
@@ -468,21 +468,21 @@ type MarkdownFormatter struct {
 
 func (f *MarkdownFormatter) Format(results *github.SearchResults) (string, error) {
     var buf strings.Builder
-    
+
     // Header with summary
     buf.WriteString(fmt.Sprintf("🔍 Found %d results\n\n", *results.Total))
-    
+
     // Format each result
     for _, item := range results.Items {
         // Repository header with stars
-        buf.WriteString(fmt.Sprintf("## 📁 [%s](%s) ⭐ %d\n", 
+        buf.WriteString(fmt.Sprintf("## 📁 [%s](%s) ⭐ %d\n",
             item.Repository.FullName,
             item.Repository.HTMLURL,
             item.Repository.StargazersCount))
-        
+
         // File path
         buf.WriteString(fmt.Sprintf("📄 **%s**\n\n", item.Path))
-        
+
         // Code content with syntax highlighting
         if len(item.TextMatches) > 0 {
             for _, match := range item.TextMatches {
@@ -491,11 +491,11 @@ func (f *MarkdownFormatter) Format(results *github.SearchResults) (string, error
                 buf.WriteString("\n```\n")
             }
         }
-        
+
         // Link to file
         buf.WriteString(fmt.Sprintf("🔗 [View on GitHub](%s)\n\n", item.HTMLURL))
     }
-    
+
     return buf.String(), nil
 }
 ```
@@ -513,9 +513,9 @@ type Config struct {
         OutputFormat string   `yaml:"output_format"`
         Repositories []string `yaml:"repositories"`
     } `yaml:"defaults"`
-    
+
     SavedSearches map[string]SavedSearch `yaml:"saved_searches"`
-    
+
     Analysis struct {
         MinPatternCount int `yaml:"min_pattern_count"`
         EnablePatterns  bool `yaml:"enable_patterns"`
@@ -528,13 +528,13 @@ func Load() (*Config, error) {
         ".gh-code-search.yaml",
         filepath.Join(os.Getenv("HOME"), ".gh-code-search.yaml"),
     }
-    
+
     for _, path := range configPaths {
         if _, err := os.Stat(path); err == nil {
             return loadFromFile(path)
         }
     }
-    
+
     // Return default config
     return defaultConfig(), nil
 }
@@ -547,7 +547,7 @@ func Load() (*Config, error) {
 // Enhanced from ghx's basic error handling
 func handleSearchError(err error, query string) error {
     errMsg := strings.ToLower(err.Error())
-    
+
     // Rate limiting (more detailed than ghx)
     if strings.Contains(errMsg, "rate limit") {
         return fmt.Errorf(`GitHub search rate limit exceeded: %w
@@ -566,7 +566,7 @@ func handleSearchError(err error, query string) error {
   gh code-search "config" --repo facebook/react --language json
   gh code-search saved run popular-configs`, err)
     }
-    
+
     // More intelligent error handling...
     return err
 }
@@ -592,7 +592,7 @@ func TestMigratedGhxFunctionality(t *testing.T) {
         },
         // Convert all 20+ ghx tests...
     }
-    
+
     for _, tt := range ghxTests {
         t.Run(tt.description, func(t *testing.T) {
             // Execute with same expected behavior as ghx
@@ -605,7 +605,7 @@ func TestMigratedGhxFunctionality(t *testing.T) {
 
 ### **Migration Checklist**
 - [ ] **Week 1**: Go project setup, basic commands, GitHub API integration
-- [ ] **Week 2**: Core search functionality, query building, basic testing  
+- [ ] **Week 2**: Core search functionality, query building, basic testing
 - [ ] **Week 3**: Enhanced features, pattern analysis, saved searches
 - [ ] **Week 4**: Output formatting, configuration, comprehensive testing
 - [ ] **Week 5**: Integration testing, documentation, CI/CD setup
@@ -617,7 +617,7 @@ func TestMigratedGhxFunctionality(t *testing.T) {
 ```bash
 # Verify all ghx functionality works in gh-code-search
 gh code-search "tsconfig.json" --filename tsconfig.json --limit 2
-gh code-search "useState" --language typescript --extension tsx --limit 1  
+gh code-search "useState" --language typescript --extension tsx --limit 1
 gh code-search "useState" --repo facebook/react --limit 1
 gh code-search "hooks" --language typescript --repo facebook/react --limit 1
 gh code-search "dependencies" --filename package.json --limit 1
@@ -628,7 +628,7 @@ gh code-search "interface" --context 50 --language typescript --limit 1
 
 ### **Quality Gates**
 - ✅ **All ghx functionality replicated**
-- ✅ **85%+ test coverage achieved**  
+- ✅ **85%+ test coverage achieved**
 - ✅ **Error handling enhanced with actionable guidance**
 - ✅ **Performance matches or exceeds ghx**
 - ✅ **Documentation comprehensive with examples**

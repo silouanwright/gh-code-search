@@ -166,7 +166,7 @@ func handleSearchError(err error, query string) error {
 	}
 
 	// Network/connectivity issues
-	if strings.Contains(errMsg, "network") || strings.Contains(errMsg, "timeout") || 
+	if strings.Contains(errMsg, "network") || strings.Contains(errMsg, "timeout") ||
 	   strings.Contains(errMsg, "connection") || strings.Contains(errMsg, "dial") {
 		return fmt.Errorf(`Network connectivity issue: %w
 
@@ -259,108 +259,6 @@ func handleClientError(err error) error {
   gh code-search "your search terms here"`, err)
 }
 
-// handleBatchError provides enhanced error handling for batch operations
-func handleBatchError(err error, searchIndex, totalSearches int) error {
-	if err == nil {
-		return nil
-	}
-
-	errMsg := strings.ToLower(err.Error())
-
-	// Rate limiting during batch operations
-	if rateLimitErr, ok := err.(*github.RateLimitError); ok {
-		resetTime := formatDuration(rateLimitErr.ResetTime)
-		progress := fmt.Sprintf("(%d/%d searches completed)", searchIndex-1, totalSearches)
-		
-		return fmt.Errorf(`Batch operation rate limit exceeded %s: %w
-
-💡 **Batch Operation Guidance**:
-  • Your batch was interrupted after %d searches
-  • Wait %s for automatic reset
-  • Consider breaking large batches into smaller chunks
-
-🔧 **Resume Strategy**:
-  • Create a new batch config with remaining searches
-  • Add delays between searches in YAML config
-  • Use lower max_results per search (e.g., 25 instead of 100)
-
-📊 **Rate Limit Status**:
-  • Limit: %d searches per hour  
-  • Remaining: %d
-  • Reset: %s
-
-🚀 **Optimized Batch Config Example**:
-  searches:
-    - name: "search1"
-      query: "your query"
-      max_results: 25
-      filters:
-        language: "typescript"`, progress, err, searchIndex-1, resetTime, rateLimitErr.Limit, rateLimitErr.Remaining, resetTime)
-	}
-
-	// Abuse rate limiting during batch operations
-	if abuseErr, ok := err.(*github.AbuseRateLimitError); ok {
-		retryAfter := "5-10 minutes"
-		if abuseErr.RetryAfter != nil {
-			retryAfter = formatDuration(*abuseErr.RetryAfter)
-		}
-		progress := fmt.Sprintf("(%d/%d searches completed)", searchIndex-1, totalSearches)
-		
-		return fmt.Errorf(`Batch operation abuse detection triggered %s: %w
-
-💡 **What Happened**:
-  • Your batch searches triggered GitHub's protective measures
-  • This happens when making requests too rapidly
-  • The system automatically adds delays, but you hit the threshold
-
-⏰ **Recovery Strategy**:
-  • Wait %s before retrying batch operations
-  • The rate limiter will automatically handle delays
-  • Consider smaller batch sizes (max 5-10 searches)
-
-🔧 **Prevention for Future Batches**:
-  • Use more specific filters to reduce API load
-  • Implement delays in your batch config
-  • Monitor rate limits: gh code-search rate-limit
-
-🚀 **Smaller Batch Example**:
-  name: "Optimized Batch"
-  searches: [max 5-7 searches]
-  output:
-    compare: true`, progress, err, retryAfter)
-	}
-
-	// Server errors during batch operations
-	if strings.Contains(errMsg, "500") || strings.Contains(errMsg, "502") || 
-	   strings.Contains(errMsg, "503") || strings.Contains(errMsg, "504") {
-		progress := fmt.Sprintf("(%d/%d searches completed)", searchIndex-1, totalSearches)
-		
-		return fmt.Errorf(`GitHub server error during batch operation %s: %w
-
-💡 **Server Issue Detected**:
-  • This is a temporary GitHub server problem
-  • Your batch progress has been saved
-  • The rate limiter automatically retried the failed request
-
-🔧 **Recovery Options**:
-  • Check GitHub status: https://status.github.com
-  • Retry the batch operation in a few minutes
-  • Consider smaller batch sizes during server issues
-
-⚡ **Performance Tips**:
-  • Monitor batch operations with --verbose
-  • Use --dry-run to validate before running
-  • Server issues are more common during peak hours
-
-🚀 **Resume Batch**:
-  gh code-search batch your-config.yaml --verbose`, progress, err)
-	}
-
-	// Generic batch error with context
-	progress := fmt.Sprintf("(%d/%d searches completed)", searchIndex-1, totalSearches)
-	return fmt.Errorf("batch operation failed %s: %w", progress, err)
-}
-
 // Helper functions for formatting
 
 // formatDuration formats a duration in a human-friendly way
@@ -382,83 +280,10 @@ func formatValidationErrors(errors []string) string {
 	if len(errors) == 0 {
 		return ""
 	}
-	
+
 	var formatted []string
 	for _, err := range errors {
 		formatted = append(formatted, fmt.Sprintf("  ❌ %s", err))
 	}
 	return strings.Join(formatted, "\n")
-}
-
-// isTemporaryError checks if an error is likely temporary
-func isTemporaryError(err error) bool {
-	if err == nil {
-		return false
-	}
-	
-	errMsg := strings.ToLower(err.Error())
-	temporaryIndicators := []string{
-		"timeout", "connection", "network", "rate limit", "temporary", "retry",
-	}
-	
-	for _, indicator := range temporaryIndicators {
-		if strings.Contains(errMsg, indicator) {
-			return true
-		}
-	}
-	
-	// Check specific error types
-	switch err.(type) {
-	case *github.RateLimitError, *github.AbuseRateLimitError:
-		return true
-	}
-	
-	return false
-}
-
-// suggestRetryStrategy provides retry suggestions based on error type
-func suggestRetryStrategy(err error) string {
-	if rateLimitErr, ok := err.(*github.RateLimitError); ok {
-		resetTime := formatDuration(rateLimitErr.ResetTime)
-		return fmt.Sprintf("Retry in %s when rate limit resets", resetTime)
-	}
-	
-	if abuseErr, ok := err.(*github.AbuseRateLimitError); ok {
-		if abuseErr.RetryAfter != nil {
-			return fmt.Sprintf("Retry in %s", formatDuration(*abuseErr.RetryAfter))
-		}
-		return "Retry in a few minutes"
-	}
-	
-	if isTemporaryError(err) {
-		return "Retry in a few seconds"
-	}
-	
-	return "Check the error message for specific guidance"
-}
-
-// formatQuerySuggestion creates helpful query suggestions
-func formatQuerySuggestion(originalQuery string) []string {
-	suggestions := []string{
-		fmt.Sprintf(`gh code-search "%s" --limit 5`, originalQuery),
-		fmt.Sprintf(`gh code-search "%s" --language javascript`, originalQuery),
-		fmt.Sprintf(`gh code-search "%s" --repo facebook/react`, originalQuery),
-	}
-	
-	// Add specific suggestions based on query content
-	if strings.Contains(strings.ToLower(originalQuery), "config") {
-		suggestions = append(suggestions, 
-			`gh code-search "config" --filename package.json`,
-			`gh code-search "tsconfig" --language json`,
-		)
-	}
-	
-	if strings.Contains(strings.ToLower(originalQuery), "react") {
-		suggestions = append(suggestions,
-			`gh code-search "react" --language typescript --extension tsx`,
-			`gh code-search "useState" --repo facebook/react`,
-		)
-	}
-	
-	return suggestions
 }

@@ -71,7 +71,7 @@ func runRateLimit(cmd *cobra.Command, args []string) error {
 	// Status indicators and advice
 	if rateLimit.Remaining == 0 {
 		fmt.Println("🚨 **Rate Limit Exhausted**")
-		fmt.Printf("You've used all %d requests. Wait %s for reset.\n", 
+		fmt.Printf("You've used all %d requests. Wait %s for reset.\n",
 			rateLimit.Limit, formatDuration(timeUntilReset))
 		fmt.Println()
 		fmt.Println("💡 **While You Wait**:")
@@ -88,7 +88,7 @@ func runRateLimit(cmd *cobra.Command, args []string) error {
 		fmt.Println("  • Save frequently used searches")
 	} else if rateLimit.Remaining < rateLimit.Limit/2 {
 		fmt.Println("📈 **Moderate Usage**")
-		fmt.Printf("You have %d requests remaining (%.1f%% used).\n", 
+		fmt.Printf("You have %d requests remaining (%.1f%% used).\n",
 			rateLimit.Remaining, usedPercent)
 	} else {
 		fmt.Println("✅ **Plenty of Requests Available**")
@@ -102,7 +102,7 @@ func runRateLimit(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  • Rate Limit Type: Per-user, per-hour\n")
 		fmt.Printf("  • Reset Time: %s\n", rateLimit.Reset.Format(time.RFC3339))
 		fmt.Printf("  • Current Time: %s\n", time.Now().Format(time.RFC3339))
-		
+
 		if timeUntilReset > 0 {
 			fmt.Printf("  • Seconds until reset: %.0f\n", timeUntilReset.Seconds())
 		}

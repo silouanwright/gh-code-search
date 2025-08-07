@@ -27,7 +27,7 @@ searches:
       min_stars: 100
     max_results: 10
     tags: ["config", "json"]
-    
+
   - name: "test-search-2"
     query: "dockerfile"
     filters:
@@ -193,7 +193,7 @@ func TestShowDryRunInfo(t *testing.T) {
 func TestExecuteSingleBatchSearch(t *testing.T) {
 	// Create mock client
 	mockClient := github.NewMockClient()
-	
+
 	// Set up mock expectations
 	expectedResults := &github.SearchResults{
 		Total: github.IntPtr(2),
@@ -255,7 +255,7 @@ func TestExecuteSingleBatchSearch(t *testing.T) {
 func TestExecuteBatchSearches(t *testing.T) {
 	// Create mock client
 	mockClient := github.NewMockClient()
-	
+
 	// Set up mock expectations for multiple searches
 	results1 := &github.SearchResults{
 		Total: github.IntPtr(1),
@@ -341,7 +341,7 @@ func TestGenerateComparisons(t *testing.T) {
 			ResultCount: 10,
 		},
 		{
-			Name:        "search-2",  
+			Name:        "search-2",
 			Query:       "dockerfile language:dockerfile",
 			ResultCount: 5,
 		},

@@ -39,46 +39,46 @@ func NewMarkdownFormatter() *MarkdownFormatter {
 // Format formats search results as markdown
 func (f *MarkdownFormatter) Format(results *github.SearchResults, query string) (string, error) {
 	var buf strings.Builder
-	
+
 	// Header with search summary
 	f.writeHeader(&buf, results, query)
-	
+
 	// Format each result
 	for i, item := range results.Items {
 		if i > 0 {
 			buf.WriteString("\n---\n\n")
 		}
-		
+
 		f.formatSearchItem(&buf, &item, i+1)
 	}
-	
+
 	// Footer with additional info
 	f.writeFooter(&buf, results)
-	
+
 	return buf.String(), nil
 }
 
 // writeHeader writes the markdown header with search summary
 func (f *MarkdownFormatter) writeHeader(buf *strings.Builder, results *github.SearchResults, query string) {
 	buf.WriteString("# GitHub Code Search Results\n\n")
-	
+
 	// Search query info
 	buf.WriteString(fmt.Sprintf("**Query**: `%s`  \n", query))
 	buf.WriteString(fmt.Sprintf("**Date**: %s  \n", time.Now().Format("2006-01-02 15:04:05")))
-	
+
 	// Results summary
 	totalCount := 0
 	if results.Total != nil {
 		totalCount = *results.Total
 	}
-	
+
 	resultCount := len(results.Items)
 	if totalCount > resultCount {
 		buf.WriteString(fmt.Sprintf("**Results**: Showing %d of %d total results\n\n", resultCount, totalCount))
 	} else {
 		buf.WriteString(fmt.Sprintf("**Results**: Found %d results\n\n", totalCount))
 	}
-	
+
 	// Results overview
 	if resultCount > 0 {
 		buf.WriteString("🔍 **Search Results:**\n\n")
@@ -96,13 +96,13 @@ func (f *MarkdownFormatter) writeHeader(buf *strings.Builder, results *github.Se
 func (f *MarkdownFormatter) formatSearchItem(buf *strings.Builder, item *github.SearchItem, index int) {
 	// Repository header with emoji and stats
 	f.formatRepositoryHeader(buf, item, index)
-	
+
 	// File information
 	f.formatFileInfo(buf, item)
-	
+
 	// Code content with syntax highlighting
 	f.formatCodeContent(buf, item)
-	
+
 	// File link and metadata
 	f.formatFileFooter(buf, item)
 }
@@ -111,19 +111,19 @@ func (f *MarkdownFormatter) formatSearchItem(buf *strings.Builder, item *github.
 func (f *MarkdownFormatter) formatRepositoryHeader(buf *strings.Builder, item *github.SearchItem, index int) {
 	repoName := getStringValue(item.Repository.FullName)
 	repoURL := getStringValue(item.Repository.HTMLURL)
-	
+
 	if repoName == "" {
 		buf.WriteString(fmt.Sprintf("## %d. Unknown Repository\n\n", index))
 		return
 	}
-	
+
 	// Repository name with link
 	if repoURL != "" {
 		buf.WriteString(fmt.Sprintf("## %d. 📁 [%s](%s)", index, repoName, repoURL))
 	} else {
 		buf.WriteString(fmt.Sprintf("## %d. 📁 %s", index, repoName))
 	}
-	
+
 	// Repository statistics
 	if f.ShowStars {
 		stats := f.getRepositoryStats(item)
@@ -131,9 +131,9 @@ func (f *MarkdownFormatter) formatRepositoryHeader(buf *strings.Builder, item *g
 			buf.WriteString(fmt.Sprintf(" %s", stats))
 		}
 	}
-	
+
 	buf.WriteString("\n\n")
-	
+
 	// Repository description
 	if desc := getStringValue(item.Repository.Description); desc != "" {
 		buf.WriteString(fmt.Sprintf("*%s*\n\n", desc))
@@ -146,13 +146,13 @@ func (f *MarkdownFormatter) formatFileInfo(buf *strings.Builder, item *github.Se
 	if filePath == "" {
 		return
 	}
-	
+
 	// File icon based on extension
 	icon := f.getFileIcon(filePath)
-	
+
 	// File path with icon
 	buf.WriteString(fmt.Sprintf("**%s %s**\n\n", icon, filePath))
-	
+
 	// File metadata
 	if f.ShowLineNumbers || f.ShowPatterns {
 		metadata := f.getFileMetadata(item)
@@ -168,14 +168,14 @@ func (f *MarkdownFormatter) formatCodeContent(buf *strings.Builder, item *github
 		buf.WriteString("*No code preview available*\n\n")
 		return
 	}
-	
+
 	language := f.detectLanguage(getStringValue(item.Path))
-	
+
 	for i, match := range item.TextMatches {
 		if i > 0 {
 			buf.WriteString("\n")
 		}
-		
+
 		f.formatTextMatch(buf, &match, language, i+1)
 	}
 }
@@ -186,15 +186,15 @@ func (f *MarkdownFormatter) formatTextMatch(buf *strings.Builder, match *github.
 	if fragment == "" {
 		return
 	}
-	
+
 	// Multiple matches in same file get numbered
 	if matchIndex > 1 {
 		buf.WriteString(fmt.Sprintf("**Match %d:**\n\n", matchIndex))
 	}
-	
+
 	// Code block with syntax highlighting
 	buf.WriteString(fmt.Sprintf("```%s\n", language))
-	
+
 	// Format the fragment with line numbers if requested
 	if f.ShowLineNumbers {
 		lines := strings.Split(fragment, "\n")
@@ -211,9 +211,9 @@ func (f *MarkdownFormatter) formatTextMatch(buf *strings.Builder, match *github.
 			buf.WriteString("\n")
 		}
 	}
-	
+
 	buf.WriteString("```\n\n")
-	
+
 	// Show match highlights if available
 	f.formatMatchHighlights(buf, match)
 }
@@ -223,7 +223,7 @@ func (f *MarkdownFormatter) formatMatchHighlights(buf *strings.Builder, match *g
 	if len(match.Matches) == 0 {
 		return
 	}
-	
+
 	buf.WriteString("**Matches:**\n")
 	for _, m := range match.Matches {
 		if text := getStringValue(m.Text); text != "" {
@@ -243,15 +243,15 @@ func (f *MarkdownFormatter) formatFileFooter(buf *strings.Builder, item *github.
 	if fileURL == "" {
 		return
 	}
-	
+
 	// File link
 	buf.WriteString(fmt.Sprintf("🔗 [View on GitHub](%s)\n", fileURL))
-	
+
 	// Additional links
 	if gitURL := getStringValue(item.GitURL); gitURL != "" {
 		buf.WriteString(fmt.Sprintf("📄 [Raw file](%s)\n", strings.Replace(gitURL, "git://", "https://raw.githubusercontent.com/", 1)))
 	}
-	
+
 	buf.WriteString("\n")
 }
 
@@ -260,19 +260,19 @@ func (f *MarkdownFormatter) writeFooter(buf *strings.Builder, results *github.Se
 	if len(results.Items) == 0 {
 		return
 	}
-	
+
 	buf.WriteString("---\n\n")
-	
+
 	// Summary statistics
 	f.writeStatistics(buf, results)
-	
+
 	// Usage tips
 	buf.WriteString("💡 **Tips:**\n")
 	buf.WriteString("- Use `--save <name>` to save this search for reuse\n")
 	buf.WriteString("- Add `--format json` for machine-readable output\n")
 	buf.WriteString("- Try `--min-stars N` to filter by repository popularity\n")
 	buf.WriteString("- Use `--context N` to adjust code context lines\n\n")
-	
+
 	// Timestamp
 	buf.WriteString(fmt.Sprintf("*Generated by gh-code-search on %s*\n", time.Now().Format("2006-01-02 15:04:05")))
 }
@@ -280,7 +280,7 @@ func (f *MarkdownFormatter) writeFooter(buf *strings.Builder, results *github.Se
 // writeStatistics writes summary statistics about the results
 func (f *MarkdownFormatter) writeStatistics(buf *strings.Builder, results *github.SearchResults) {
 	buf.WriteString("📊 **Summary:**\n")
-	
+
 	// Language distribution
 	languages := f.analyzeLanguages(results)
 	if len(languages) > 0 {
@@ -292,13 +292,13 @@ func (f *MarkdownFormatter) writeStatistics(buf *strings.Builder, results *githu
 		buf.WriteString(strings.Join(langParts, ", "))
 		buf.WriteString("\n")
 	}
-	
+
 	// Repository distribution
 	repos := f.analyzeRepositories(results)
 	if len(repos) > 1 {
 		buf.WriteString(fmt.Sprintf("- **Repositories**: %d unique repositories\n", len(repos)))
 	}
-	
+
 	// Top repositories by stars
 	if f.ShowStars {
 		topRepos := f.getTopRepositories(results, 3)
@@ -312,7 +312,7 @@ func (f *MarkdownFormatter) writeStatistics(buf *strings.Builder, results *githu
 			buf.WriteString("\n")
 		}
 	}
-	
+
 	buf.WriteString("\n")
 }
 
@@ -337,23 +337,23 @@ func getIntValue(i *int) int {
 // getRepositoryStats formats repository statistics
 func (f *MarkdownFormatter) getRepositoryStats(item *github.SearchItem) string {
 	var stats []string
-	
+
 	if stars := getIntValue(item.Repository.StargazersCount); stars > 0 {
 		stats = append(stats, fmt.Sprintf("⭐ %s", formatNumber(stars)))
 	}
-	
+
 	if forks := getIntValue(item.Repository.ForksCount); forks > 0 {
 		stats = append(stats, fmt.Sprintf("🔀 %s", formatNumber(forks)))
 	}
-	
+
 	if lang := getStringValue(item.Repository.Language); lang != "" {
 		stats = append(stats, fmt.Sprintf("📝 %s", lang))
 	}
-	
+
 	if len(stats) == 0 {
 		return ""
 	}
-	
+
 	return "(" + strings.Join(stats, " • ") + ")"
 }
 
@@ -361,7 +361,7 @@ func (f *MarkdownFormatter) getRepositoryStats(item *github.SearchItem) string {
 func (f *MarkdownFormatter) getFileIcon(filePath string) string {
 	ext := strings.ToLower(filepath.Ext(filePath))
 	filename := strings.ToLower(filepath.Base(filePath))
-	
+
 	// Special filenames
 	switch filename {
 	case "dockerfile", "dockerfile.dev", "dockerfile.prod":
@@ -379,7 +379,7 @@ func (f *MarkdownFormatter) getFileIcon(filePath string) string {
 	case ".gitignore":
 		return "🚫"
 	}
-	
+
 	// Extensions
 	switch ext {
 	case ".go":
@@ -437,7 +437,7 @@ func (f *MarkdownFormatter) getFileIcon(filePath string) string {
 func (f *MarkdownFormatter) detectLanguage(path string) string {
 	ext := strings.ToLower(filepath.Ext(path))
 	filename := strings.ToLower(filepath.Base(path))
-	
+
 	// Special filenames
 	switch filename {
 	case "dockerfile":
@@ -445,7 +445,7 @@ func (f *MarkdownFormatter) detectLanguage(path string) string {
 	case "makefile":
 		return "makefile"
 	}
-	
+
 	// Extensions
 	switch ext {
 	case ".go":
@@ -508,17 +508,17 @@ func (f *MarkdownFormatter) detectLanguage(path string) string {
 // getFileMetadata returns metadata about the file
 func (f *MarkdownFormatter) getFileMetadata(item *github.SearchItem) string {
 	var metadata []string
-	
+
 	// File size info from matches
 	if len(item.TextMatches) > 0 {
 		metadata = append(metadata, fmt.Sprintf("%d match(es)", len(item.TextMatches)))
 	}
-	
+
 	// Language from repository
 	if lang := getStringValue(item.Repository.Language); lang != "" {
 		metadata = append(metadata, fmt.Sprintf("Language: %s", lang))
 	}
-	
+
 	return strings.Join(metadata, " • ")
 }
 
@@ -528,7 +528,7 @@ func (f *MarkdownFormatter) limitContentLines(content string, maxLines int) stri
 	if len(lines) <= maxLines {
 		return content
 	}
-	
+
 	limited := strings.Join(lines[:maxLines], "\n")
 	remaining := len(lines) - maxLines
 	limited += fmt.Sprintf("\n... (%d more lines)", remaining)
@@ -551,7 +551,7 @@ func formatNumber(n int) string {
 // analyzeLanguages returns language distribution in results
 func (f *MarkdownFormatter) analyzeLanguages(results *github.SearchResults) map[string]int {
 	languages := make(map[string]int)
-	
+
 	for _, item := range results.Items {
 		if path := getStringValue(item.Path); path != "" {
 			lang := f.detectLanguage(path)
@@ -560,20 +560,20 @@ func (f *MarkdownFormatter) analyzeLanguages(results *github.SearchResults) map[
 			}
 		}
 	}
-	
+
 	return languages
 }
 
 // analyzeRepositories returns unique repository names
 func (f *MarkdownFormatter) analyzeRepositories(results *github.SearchResults) map[string]bool {
 	repos := make(map[string]bool)
-	
+
 	for _, item := range results.Items {
 		if repoName := getStringValue(item.Repository.FullName); repoName != "" {
 			repos[repoName] = true
 		}
 	}
-	
+
 	return repos
 }
 
@@ -585,7 +585,7 @@ type repoInfo struct {
 // getTopRepositories returns top repositories by star count
 func (f *MarkdownFormatter) getTopRepositories(results *github.SearchResults, limit int) []repoInfo {
 	repoMap := make(map[string]int)
-	
+
 	for _, item := range results.Items {
 		if repoName := getStringValue(item.Repository.FullName); repoName != "" {
 			stars := getIntValue(item.Repository.StargazersCount)
@@ -594,13 +594,13 @@ func (f *MarkdownFormatter) getTopRepositories(results *github.SearchResults, li
 			}
 		}
 	}
-	
+
 	// Convert to slice and sort
 	repos := make([]repoInfo, 0, len(repoMap))
 	for name, stars := range repoMap {
 		repos = append(repos, repoInfo{name: name, stars: stars})
 	}
-	
+
 	// Simple sort by stars (descending)
 	for i := 0; i < len(repos); i++ {
 		for j := i + 1; j < len(repos); j++ {
@@ -609,11 +609,11 @@ func (f *MarkdownFormatter) getTopRepositories(results *github.SearchResults, li
 			}
 		}
 	}
-	
+
 	// Limit results
 	if len(repos) > limit {
 		repos = repos[:limit]
 	}
-	
+
 	return repos
 }

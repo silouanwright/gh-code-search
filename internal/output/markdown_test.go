@@ -43,7 +43,7 @@ func TestMarkdownFormatter_Format(t *testing.T) {
 	results := createTestSearchResults()
 	output, err = formatter.Format(results, "useState")
 	require.NoError(t, err)
-	
+
 	assert.Contains(t, output, "# GitHub Code Search Results")
 	assert.Contains(t, output, "Query**: `useState`")
 	assert.Contains(t, output, "Found 2 results")
@@ -125,7 +125,7 @@ func TestGetIntValue(t *testing.T) {
 			expected: 42,
 		},
 		{
-			name:     "negative value", 
+			name:     "negative value",
 			input:    github.IntPtr(-10),
 			expected: -10,
 		},
@@ -230,7 +230,7 @@ func TestGetFileIcon(t *testing.T) {
 		{"notes.md", "📝"},
 		{"setup.sh", "💻"},
 		{"query.sql", "🗃️"},
-		
+
 		// Default
 		{"unknown.xyz", "📄"},
 		{"", "📄"},
@@ -406,7 +406,7 @@ func TestGetTopRepositories(t *testing.T) {
 
 func TestGetFileMetadata(t *testing.T) {
 	formatter := NewMarkdownFormatter()
-	
+
 	item := &github.SearchItem{
 		TextMatches: []github.TextMatch{
 			{Fragment: github.StringPtr("match1")},

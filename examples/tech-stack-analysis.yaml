@@ -14,7 +14,7 @@ searches:
       min_stars: 100
     max_results: 50
     tags: ["vite", "react", "typescript"]
-    
+
   - name: "webpack-react-ts"
     query: "webpack.config"
     filters:

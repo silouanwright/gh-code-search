@@ -219,11 +219,11 @@ func TestListSavedSearches(t *testing.T) {
 	config.AddSavedSearch(search3)
 
 	// Use them in different order to set LastUsed times
-	config.UseSavedSearch("old-search")
+	_ = config.UseSavedSearch("old-search")
 	time.Sleep(time.Millisecond)
-	config.UseSavedSearch("new-search")
+	_ = config.UseSavedSearch("new-search")
 	time.Sleep(time.Millisecond)
-	config.UseSavedSearch("middle-search")
+	_ = config.UseSavedSearch("middle-search")
 
 	// List should be sorted by last used (most recent first)
 	searches := config.ListSavedSearches()
@@ -268,13 +268,13 @@ func TestConfigFileOperations(t *testing.T) {
 
 func TestConfigPathResolution(t *testing.T) {
 	paths := getConfigPaths()
-	
+
 	assert.NotEmpty(t, paths)
-	
+
 	// Should check current directory first
 	assert.Contains(t, paths, ".gh-code-search.yaml")
 	assert.Contains(t, paths, ".gh-code-search.yml")
-	
+
 	// Should include user config directory
 	configDir := getConfigDir()
 	expectedPath := filepath.Join(configDir, "gh-code-search.yaml")
@@ -285,24 +285,24 @@ func TestGetConfigDir(t *testing.T) {
 	// Test with environment variable
 	originalEnv := os.Getenv("GH_SEARCH_CONFIG_DIR")
 	defer os.Setenv("GH_SEARCH_CONFIG_DIR", originalEnv)
-	
+
 	testDir := "/custom/config/dir"
 	os.Setenv("GH_SEARCH_CONFIG_DIR", testDir)
-	
+
 	configDir := getConfigDir()
 	assert.Equal(t, testDir, configDir)
-	
+
 	// Test with XDG_CONFIG_HOME
 	os.Setenv("GH_SEARCH_CONFIG_DIR", "")
 	originalXDG := os.Getenv("XDG_CONFIG_HOME")
 	defer os.Setenv("XDG_CONFIG_HOME", originalXDG)
-	
+
 	xdgHome := "/custom/xdg/config"
 	os.Setenv("XDG_CONFIG_HOME", xdgHome)
-	
+
 	configDir = getConfigDir()
 	assert.Equal(t, filepath.Join(xdgHome, "gh-code-search"), configDir)
-	
+
 	// Clean up environment
 	os.Setenv("XDG_CONFIG_HOME", originalXDG)
 }
@@ -335,22 +335,22 @@ func TestApplyDefaults(t *testing.T) {
 func TestLoad_WithoutConfigFile(t *testing.T) {
 	// Save current working directory
 	originalWd, _ := os.Getwd()
-	
+
 	// Change to temporary directory where no config files exist
 	tempDir := t.TempDir()
 	err := os.Chdir(tempDir)
 	require.NoError(t, err)
-	
+
 	// Restore working directory after test
 	defer func() {
-		os.Chdir(originalWd)
+		_ = os.Chdir(originalWd)
 	}()
 
 	// Load should return default config when no file exists
 	config, err := Load()
 	require.NoError(t, err)
 	assert.NotNil(t, config)
-	
+
 	// Should have default values
 	assert.Equal(t, 50, config.Defaults.MaxResults)
 	assert.Equal(t, "default", config.Defaults.OutputFormat)
@@ -360,11 +360,11 @@ func TestLoad_WithoutConfigFile(t *testing.T) {
 func TestLoadFromFile_InvalidYAML(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "invalid.yaml")
-	
+
 	// Write invalid YAML
 	err := os.WriteFile(configPath, []byte("invalid: yaml: content: ["), 0644)
 	require.NoError(t, err)
-	
+
 	// Should return error
 	_, err = LoadFromFile(configPath)
 	assert.Error(t, err)
@@ -375,7 +375,7 @@ func TestConfigSave_Default(t *testing.T) {
 	// This test is tricky because Save() writes to user's config directory
 	// We'll just verify that the method exists and basic error handling works
 	config := defaultConfig()
-	
+
 	// Test SaveToFile with an invalid path (directory doesn't exist)
 	err := config.SaveToFile("/nonexistent/path/config.yaml")
 	assert.Error(t, err)

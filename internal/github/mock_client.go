@@ -38,12 +38,12 @@ func NewMockClient() *MockClient {
 // SearchCode implements GitHubAPI.SearchCode for testing
 func (m *MockClient) SearchCode(ctx context.Context, query string, opts *SearchOptions) (*SearchResults, error) {
 	m.logCall("SearchCode", query, opts)
-	
+
 	// Check for configured errors first
 	if err, exists := m.Errors["SearchCode"]; exists {
 		return nil, err
 	}
-	
+
 	// Check for paginated results first (for testing pagination)
 	if paginatedResults, exists := m.PaginatedSearchResults[query]; exists {
 		page := 1
@@ -59,12 +59,12 @@ func (m *MockClient) SearchCode(ctx context.Context, query string, opts *SearchO
 			Items: []SearchItem{},
 		}, nil
 	}
-	
+
 	// Return configured single-page results
 	if results, exists := m.SearchResults[query]; exists {
 		return results, nil
 	}
-	
+
 	// Default to empty results
 	return &SearchResults{
 		Total: IntPtr(0),
@@ -76,17 +76,17 @@ func (m *MockClient) SearchCode(ctx context.Context, query string, opts *SearchO
 func (m *MockClient) GetFileContent(ctx context.Context, owner, repo, path, ref string) ([]byte, error) {
 	key := fmt.Sprintf("%s/%s/%s@%s", owner, repo, path, ref)
 	m.logCall("GetFileContent", owner, repo, path, ref)
-	
+
 	// Check for configured errors
 	if err, exists := m.Errors["GetFileContent"]; exists {
 		return nil, err
 	}
-	
+
 	// Return configured content
 	if content, exists := m.FileContents[key]; exists {
 		return content, nil
 	}
-	
+
 	// Default to empty content
 	return []byte{}, nil
 }
@@ -94,17 +94,17 @@ func (m *MockClient) GetFileContent(ctx context.Context, owner, repo, path, ref 
 // GetRateLimit implements GitHubAPI.GetRateLimit for testing
 func (m *MockClient) GetRateLimit(ctx context.Context) (*RateLimit, error) {
 	m.logCall("GetRateLimit")
-	
+
 	// Check for configured errors
 	if err, exists := m.Errors["GetRateLimit"]; exists {
 		return nil, err
 	}
-	
+
 	// Return configured rate limit or default
 	if limit, exists := m.RateLimits["default"]; exists {
 		return limit, nil
 	}
-	
+
 	// Default rate limit
 	return &RateLimit{
 		Limit:     30,

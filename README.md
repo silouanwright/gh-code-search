@@ -41,7 +41,7 @@ gh code-search "interface" --owner microsoft --owner google --language typescrip
 
 # Page-based search (API efficient for large datasets)
 gh code-search "config" --page 1 --limit 100        # Get first 100 results
-gh code-search "config" --page 2 --limit 100        # Get next 100 results  
+gh code-search "config" --page 2 --limit 100        # Get next 100 results
 gh code-search "config" --page 3 --limit 50         # Get results 201-250
 ```
 
@@ -80,7 +80,7 @@ Perfect for finding working configuration examples:
 # TypeScript project setup
 gh code-search "tsconfig.json" --language json --min-stars 500
 
-# ESLint configurations  
+# ESLint configurations
 gh code-search "eslint.config" --language javascript --path "**/examples/**"
 
 # Docker best practices
@@ -261,7 +261,7 @@ gh code-search "config" --repo specific/repo --language json
 
 ### No Results Found
 - Try broader search terms
-- Remove or adjust filters  
+- Remove or adjust filters
 - Check spelling and syntax
 - Search in popular repositories with `--min-stars`
 
@@ -292,7 +292,7 @@ gh-code-search/
 ├── internal/
 │   ├── github/            # GitHub API client
 │   ├── search/            # Search logic and query building
-│   ├── config/            # Configuration management  
+│   ├── config/            # Configuration management
 │   └── output/            # Output formatting
 ├── docs/                  # Documentation
 └── examples/              # Configuration examples

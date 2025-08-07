@@ -229,7 +229,7 @@ func (qb *QueryBuilder) GetFilters() SearchFilters {
 		// Simple parsing for >=n format
 		if strings.HasPrefix(starsConstraint, ">=") {
 			var stars int
-			fmt.Sscanf(starsConstraint, ">=%d", &stars)
+			_, _ = fmt.Sscanf(starsConstraint, ">=%d", &stars)
 			filters.MinStars = stars
 		}
 	}
@@ -320,7 +320,7 @@ func isValidSizeFormat(size string) bool {
 		_, err := fmt.Sscanf(size[1:], "%d", &num)
 		return err == nil
 	}
-	
+
 	// Check for range format (e.g., "100..200")
 	if strings.Contains(size, "..") {
 		parts := strings.Split(size, "..")
@@ -332,7 +332,7 @@ func isValidSizeFormat(size string) bool {
 		}
 		return false
 	}
-	
+
 	// Check for plain numbers
 	var num int
 	_, err := fmt.Sscanf(size, "%d", &num)
@@ -352,7 +352,7 @@ func isValidForkValue(fork string) bool {
 // BuildConfigQuery creates a query for finding configuration files
 func BuildConfigQuery(configType string, filters SearchFilters) string {
 	var terms []string
-	
+
 	switch strings.ToLower(configType) {
 	case "typescript", "tsconfig":
 		terms = []string{"tsconfig.json"}
@@ -387,7 +387,7 @@ func BuildPatternQuery(pattern string, language string, filters SearchFilters) s
 	if language != "" {
 		filters.Language = language
 	}
-	
+
 	return NewQueryBuilderFromFilters(terms, filters).Build()
 }
 

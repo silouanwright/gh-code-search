@@ -35,7 +35,7 @@ Thank you for your interest in contributing to gh-code-search! This project is i
 ### Commit Messages
 Use conventional commit format:
 - `feat:` - New features
-- `fix:` - Bug fixes  
+- `fix:` - Bug fixes
 - `docs:` - Documentation changes
 - `test:` - Test additions/changes
 - `refactor:` - Code restructuring

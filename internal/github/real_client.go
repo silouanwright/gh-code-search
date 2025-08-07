@@ -27,7 +27,7 @@ func NewRealClient() (*RealClient, error) {
 
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	tc := oauth2.NewClient(context.Background(), ts)
-	
+
 	return &RealClient{
 		client: github.NewClient(tc),
 	}, nil
@@ -37,7 +37,7 @@ func NewRealClient() (*RealClient, error) {
 func NewRealClientWithToken(token string) *RealClient {
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	tc := oauth2.NewClient(context.Background(), ts)
-	
+
 	return &RealClient{
 		client: github.NewClient(tc),
 	}
@@ -65,7 +65,7 @@ func (c *RealClient) SearchCode(ctx context.Context, query string, opts *SearchO
 
 	// Convert the result to our format
 	searchResults := convertSearchResults(result)
-	
+
 	// Enrich repository metadata if star counts are missing (Code Search API limitation)
 	// This is optional and can be disabled via environment variable
 	if os.Getenv("GH_CODE_SEARCH_DISABLE_REPO_ENRICHMENT") == "" {
@@ -78,7 +78,7 @@ func (c *RealClient) SearchCode(ctx context.Context, query string, opts *SearchO
 // GetFileContent implements GitHubAPI.GetFileContent
 func (c *RealClient) GetFileContent(ctx context.Context, owner, repo, path, ref string) ([]byte, error) {
 	opts := &github.RepositoryContentGetOptions{Ref: ref}
-	
+
 	fileContent, _, resp, err := c.client.Repositories.GetContents(ctx, owner, repo, path, opts)
 	if err != nil {
 		return nil, formatGitHubError(err, resp)
@@ -98,7 +98,7 @@ func (c *RealClient) GetFileContent(ctx context.Context, owner, repo, path, ref 
 
 // GetRateLimit implements GitHubAPI.GetRateLimit
 func (c *RealClient) GetRateLimit(ctx context.Context) (*RateLimit, error) {
-	rateLimits, resp, err := c.client.RateLimits(ctx)
+	rateLimits, resp, err := c.client.RateLimit.Get(ctx)
 	if err != nil {
 		return nil, formatGitHubError(err, resp)
 	}
@@ -187,7 +187,7 @@ func formatGitHubError(err error, resp *github.Response) error {
 // convertSearchResults converts GitHub's search results to our format
 func convertSearchResults(result *github.CodeSearchResult) *SearchResults {
 	items := make([]SearchItem, len(result.CodeResults))
-	
+
 	for i, item := range result.CodeResults {
 		items[i] = convertSearchItem(item)
 	}
@@ -324,7 +324,7 @@ func getStringFromPtr(ptr *string) string {
 	return *ptr
 }
 
-// enrichRepositoryMetadata fetches missing repository metadata (like star counts) 
+// enrichRepositoryMetadata fetches missing repository metadata (like star counts)
 // that are not included in Code Search API responses
 func (c *RealClient) enrichRepositoryMetadata(ctx context.Context, results *SearchResults) {
 	if results == nil || len(results.Items) == 0 {
@@ -347,7 +347,7 @@ func (c *RealClient) enrichRepositoryMetadata(ctx context.Context, results *Sear
 	// Limit the number of additional API calls to prevent rate limit issues
 	maxEnrichments := 10
 	if len(reposToEnrich) > maxEnrichments && os.Getenv("GITHUB_CLIENT_DEBUG") != "" {
-		fmt.Printf("[DEBUG] Limiting repository enrichment to %d out of %d unique repositories\n", 
+		fmt.Printf("[DEBUG] Limiting repository enrichment to %d out of %d unique repositories\n",
 			maxEnrichments, len(reposToEnrich))
 	}
 
@@ -356,7 +356,7 @@ func (c *RealClient) enrichRepositoryMetadata(ctx context.Context, results *Sear
 		if count >= maxEnrichments {
 			break
 		}
-		
+
 		// Parse owner/repo from full name
 		parts := strings.SplitN(fullName, "/", 2)
 		if len(parts) != 2 {
@@ -376,7 +376,7 @@ func (c *RealClient) enrichRepositoryMetadata(ctx context.Context, results *Sear
 			if repoData.WatchersCount != nil {
 				repo.WatchersCount = repoData.WatchersCount
 			}
-			
+
 			if os.Getenv("GITHUB_CLIENT_DEBUG") != "" {
 				stars := 0
 				if repo.StargazersCount != nil {
@@ -387,9 +387,9 @@ func (c *RealClient) enrichRepositoryMetadata(ctx context.Context, results *Sear
 		} else if os.Getenv("GITHUB_CLIENT_DEBUG") != "" {
 			fmt.Printf("[DEBUG] Failed to enrich %s: %v\n", fullName, err)
 		}
-		
+
 		count++
-		
+
 		// Small delay to be respectful of API limits
 		if count < len(reposToEnrich) && count < maxEnrichments {
 			time.Sleep(100 * time.Millisecond)

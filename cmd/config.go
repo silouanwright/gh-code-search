@@ -23,7 +23,7 @@ gh-code-search behavior and preferences.`,
   # Reset editor preference
   gh code-search config reset defaults.editor
 
-  # Reset all configuration to defaults  
+  # Reset all configuration to defaults
   gh code-search config reset --all
 
   # Set default language
@@ -141,7 +141,7 @@ func runConfigReset(cmd *cobra.Command, args []string) error {
 			".gh-code-search.yaml",
 			".gh-code-search.yml",
 		}
-		
+
 		// Also check user config directory
 		if homeDir, err := os.UserHomeDir(); err == nil {
 			configPaths = append(configPaths,
@@ -151,7 +151,7 @@ func runConfigReset(cmd *cobra.Command, args []string) error {
 				homeDir+"/.gh-code-search.yml",
 			)
 		}
-		
+
 		// Remove existing config files
 		for _, path := range configPaths {
 			if _, err := os.Stat(path); err == nil {
@@ -160,7 +160,7 @@ func runConfigReset(cmd *cobra.Command, args []string) error {
 				}
 			}
 		}
-		
+
 		fmt.Println("✅ All configuration reset to defaults")
 		return nil
 	}
@@ -170,7 +170,7 @@ func runConfigReset(cmd *cobra.Command, args []string) error {
 	}
 
 	key := args[0]
-	
+
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)

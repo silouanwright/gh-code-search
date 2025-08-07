@@ -96,7 +96,7 @@ func TestSearchCommand(t *testing.T) {
 				minStars = 1000
 			},
 			setupMock: func(mock *github.MockClient) {
-				mock.SetSearchResults("hooks language:typescript extension:tsx stars:>=1000 repo:facebook/react repo:vercel/next.js", 
+				mock.SetSearchResults("hooks language:typescript extension:tsx stars:>=1000 repo:facebook/react repo:vercel/next.js",
 					github.CreateTestSearchResults(2,
 						github.CreateTestSearchItem("facebook/react", "packages/react/src/Component.tsx", "useEffect hook"),
 						github.CreateTestSearchItem("vercel/next.js", "examples/with-hooks/pages/index.tsx", "useState hook"),
@@ -246,9 +246,9 @@ func TestSearchCommand(t *testing.T) {
 				tt.setupMock(mockClient)
 			}
 			searchClient = mockClient
-			defer func() { 
+			defer func() {
 				searchClient = originalClient
-				resetSearchFlags() 
+				resetSearchFlags()
 			}()
 
 			// Apply flag setup
@@ -262,6 +262,8 @@ func TestSearchCommand(t *testing.T) {
 
 			// Capture output
 			output := captureOutput(func() error {
+				// Set context on command
+				cmd.SetContext(context.Background())
 				return runSearch(cmd, tt.args)
 			})
 
@@ -281,7 +283,7 @@ func TestSearchCommand(t *testing.T) {
 			// Verify API calls if not in error cases
 			if !tt.wantErr && !dryRun {
 				assert.Equal(t, 1, mockClient.GetCallCount("SearchCode"), "Should make exactly one search call")
-				
+
 				// Verify query construction
 				if tt.expectedQuery != "" {
 					lastCall := mockClient.GetLastCall()
@@ -348,7 +350,7 @@ func TestBuildSearchQuery(t *testing.T) {
 				searchFilename = "*.tsx"
 				searchExtension = "tsx"
 				searchRepo = []string{"facebook/react"}
-				searchPath = "src/components" 
+				searchPath = "src/components"
 				searchOwner = []string{"facebook"}
 				searchSize = ">100"
 				minStars = 1000
@@ -518,31 +520,31 @@ func captureOutput(fn func() error) capturedOutput {
 	// Save original stdout and stderr
 	oldStdout := os.Stdout
 	oldStderr := os.Stderr
-	
+
 	// Create pipes for stdout and stderr
 	stdoutR, stdoutW, _ := os.Pipe()
 	stderrR, stderrW, _ := os.Pipe()
-	
+
 	// Redirect stdout and stderr
 	os.Stdout = stdoutW
 	os.Stderr = stderrW
-	
+
 	// Execute function
 	err := fn()
-	
+
 	// Close write ends
 	stdoutW.Close()
 	stderrW.Close()
-	
+
 	// Restore original stdout and stderr
 	os.Stdout = oldStdout
 	os.Stderr = oldStderr
-	
+
 	// Read captured output
 	var stdoutBuf, stderrBuf bytes.Buffer
-	io.Copy(&stdoutBuf, stdoutR)
-	io.Copy(&stderrBuf, stderrR)
-	
+	_, _ = io.Copy(&stdoutBuf, stdoutR)
+	_, _ = io.Copy(&stderrBuf, stderrR)
+
 	return capturedOutput{
 		stdout: stdoutBuf.String(),
 		stderr: stderrBuf.String(),
@@ -562,12 +564,11 @@ func resetSearchFlags() {
 	searchLimit = 50
 	contextLines = 20
 	outputFormat = "default"
-	saveAs = ""
 	pipe = false
 	minStars = 0
 	sort = "relevance"
 	order = "desc"
-	
+
 	// Reset global flags
 	dryRun = false
 	verbose = false
@@ -721,17 +722,17 @@ func TestLimitFunctionality(t *testing.T) {
 
 			// Execute search
 			results, err := executeSearch(context.Background(), "test")
-			
+
 			// Verify no error
 			assert.NoError(t, err, tt.description)
-			
+
 			// Verify correct number of API calls
-			assert.Equal(t, tt.expectedCalls, mockClient.GetCallCount("SearchCode"), 
+			assert.Equal(t, tt.expectedCalls, mockClient.GetCallCount("SearchCode"),
 				"Expected %d API calls for limit %d (%s)", tt.expectedCalls, tt.limit, tt.description)
 
 			// Verify correct number of items returned
 			if results != nil {
-				assert.Equal(t, tt.expectedItems, len(results.Items), 
+				assert.Equal(t, tt.expectedItems, len(results.Items),
 					"Expected %d items for limit %d (%s)", tt.expectedItems, tt.limit, tt.description)
 			}
 
@@ -741,9 +742,9 @@ func TestLimitFunctionality(t *testing.T) {
 				if call.Method == "SearchCode" && len(call.Args) >= 2 {
 					if opts, ok := call.Args[1].(*github.SearchOptions); ok {
 						expectedPage := i + 1
-						assert.Equal(t, expectedPage, opts.ListOptions.Page, 
+						assert.Equal(t, expectedPage, opts.ListOptions.Page,
 							"Call %d should be for page %d", i+1, expectedPage)
-						
+
 						// PerPage should be min(remaining, 100)
 						remaining := tt.limit - (i * 100)
 						expectedPerPage := remaining
@@ -874,12 +875,12 @@ func TestTextMatchesInResults(t *testing.T) {
 
 			// Verify expected content is in output
 			if tt.expectedOutput != "" {
-				assert.Contains(t, output.stdout, tt.expectedOutput, 
+				assert.Contains(t, output.stdout, tt.expectedOutput,
 					"Output should contain expected text fragment (%s)", tt.description)
 			}
 
 			// Verify API was called
-			assert.Equal(t, 1, mockClient.GetCallCount("SearchCode"), 
+			assert.Equal(t, 1, mockClient.GetCallCount("SearchCode"),
 				"Should make exactly one search API call (%s)", tt.description)
 		})
 	}

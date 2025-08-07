@@ -76,7 +76,7 @@ type GitHubSettings struct {
 // Load loads configuration from the standard locations
 func Load() (*Config, error) {
 	configPaths := getConfigPaths()
-	
+
 	for _, path := range configPaths {
 		if _, err := os.Stat(path); err == nil {
 			config, err := loadFromFile(path)
@@ -86,7 +86,7 @@ func Load() (*Config, error) {
 			return config, nil
 		}
 	}
-	
+
 	// Return default configuration if no config file found
 	return defaultConfig(), nil
 }
@@ -102,7 +102,7 @@ func (c *Config) Save() error {
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
-	
+
 	configPath := filepath.Join(configDir, "gh-code-search.yaml")
 	return c.SaveToFile(configPath)
 }
@@ -113,11 +113,11 @@ func (c *Config) SaveToFile(path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
-	
+
 	if err := os.WriteFile(path, data, 0644); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -126,7 +126,7 @@ func (c *Config) AddSavedSearch(search SavedSearch) {
 	if c.SavedSearches == nil {
 		c.SavedSearches = make(map[string]SavedSearch)
 	}
-	
+
 	// Update timestamps
 	if existing, exists := c.SavedSearches[search.Name]; exists {
 		search.Created = existing.Created
@@ -135,7 +135,7 @@ func (c *Config) AddSavedSearch(search SavedSearch) {
 		search.Created = time.Now()
 		search.UseCount = 0
 	}
-	
+
 	c.SavedSearches[search.Name] = search
 }
 
@@ -151,11 +151,11 @@ func (c *Config) UseSavedSearch(name string) error {
 	if !exists {
 		return fmt.Errorf("saved search '%s' not found", name)
 	}
-	
+
 	search.LastUsed = time.Now()
 	search.UseCount++
 	c.SavedSearches[name] = search
-	
+
 	return nil
 }
 
@@ -164,7 +164,7 @@ func (c *Config) DeleteSavedSearch(name string) error {
 	if _, exists := c.SavedSearches[name]; !exists {
 		return fmt.Errorf("saved search '%s' not found", name)
 	}
-	
+
 	delete(c.SavedSearches, name)
 	return nil
 }
@@ -172,11 +172,11 @@ func (c *Config) DeleteSavedSearch(name string) error {
 // ListSavedSearches returns all saved searches sorted by last used
 func (c *Config) ListSavedSearches() []SavedSearch {
 	searches := make([]SavedSearch, 0, len(c.SavedSearches))
-	
+
 	for _, search := range c.SavedSearches {
 		searches = append(searches, search)
 	}
-	
+
 	// Sort by last used (most recent first)
 	for i := 0; i < len(searches); i++ {
 		for j := i + 1; j < len(searches); j++ {
@@ -185,7 +185,7 @@ func (c *Config) ListSavedSearches() []SavedSearch {
 			}
 		}
 	}
-	
+
 	return searches
 }
 
@@ -195,25 +195,25 @@ func (c *Config) Validate() error {
 	if c.Defaults.MaxResults < 1 || c.Defaults.MaxResults > 1000 {
 		return fmt.Errorf("defaults.max_results must be between 1 and 1000")
 	}
-	
+
 	if c.Defaults.ContextLines < 0 || c.Defaults.ContextLines > 100 {
 		return fmt.Errorf("defaults.context_lines must be between 0 and 100")
 	}
-	
+
 	validFormats := map[string]bool{
 		"default": true, "json": true, "markdown": true, "compact": true,
 	}
 	if !validFormats[c.Defaults.OutputFormat] {
 		return fmt.Errorf("defaults.output_format must be one of: default, json, markdown, compact")
 	}
-	
+
 	validSortBy := map[string]bool{
 		"relevance": true, "stars": true, "updated": true, "created": true,
 	}
 	if !validSortBy[c.Defaults.SortBy] {
 		return fmt.Errorf("defaults.sort_by must be one of: relevance, stars, updated, created")
 	}
-	
+
 	// Validate output settings
 	validColorModes := map[string]bool{
 		"auto": true, "always": true, "never": true,
@@ -221,29 +221,29 @@ func (c *Config) Validate() error {
 	if !validColorModes[c.Output.ColorMode] {
 		return fmt.Errorf("output.color_mode must be one of: auto, always, never")
 	}
-	
+
 	if c.Output.MaxContentLines < 0 {
 		return fmt.Errorf("output.max_content_lines must be non-negative")
 	}
-	
+
 	// Validate analysis settings
 	if c.Analysis.MinPatternCount < 1 {
 		return fmt.Errorf("analysis.min_pattern_count must be at least 1")
 	}
-	
+
 	if c.Analysis.PatternThreshold < 0 || c.Analysis.PatternThreshold > 1 {
 		return fmt.Errorf("analysis.pattern_threshold must be between 0 and 1")
 	}
-	
+
 	// Validate GitHub settings
 	if c.GitHub.RateLimitBuffer < 0 {
 		return fmt.Errorf("github.rate_limit_buffer must be non-negative")
 	}
-	
+
 	if c.GitHub.RetryCount < 0 || c.GitHub.RetryCount > 10 {
 		return fmt.Errorf("github.retry_count must be between 0 and 10")
 	}
-	
+
 	return nil
 }
 
@@ -253,21 +253,21 @@ func (c *Config) Validate() error {
 func getConfigPaths() []string {
 	configDir := getConfigDir()
 	homeDir, _ := os.UserHomeDir()
-	
+
 	paths := []string{
 		".gh-code-search.yaml",                                    // Current directory
 		".gh-code-search.yml",                                     // Current directory (alternative)
 		filepath.Join(configDir, "gh-code-search.yaml"),          // User config directory
 		filepath.Join(configDir, "gh-code-search.yml"),           // User config directory (alternative)
 	}
-	
+
 	if homeDir != "" {
 		paths = append(paths,
 			filepath.Join(homeDir, ".gh-code-search.yaml"),        // Home directory
 			filepath.Join(homeDir, ".gh-code-search.yml"),         // Home directory (alternative)
 		)
 	}
-	
+
 	return paths
 }
 
@@ -276,15 +276,15 @@ func getConfigDir() string {
 	if configDir := os.Getenv("GH_SEARCH_CONFIG_DIR"); configDir != "" {
 		return configDir
 	}
-	
+
 	if configHome := os.Getenv("XDG_CONFIG_HOME"); configHome != "" {
 		return filepath.Join(configHome, "gh-code-search")
 	}
-	
+
 	if homeDir, err := os.UserHomeDir(); err == nil {
 		return filepath.Join(homeDir, ".config", "gh-code-search")
 	}
-	
+
 	return "."
 }
 
@@ -294,20 +294,20 @@ func loadFromFile(path string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
-	
+
 	var config Config
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
-	
+
 	// Apply defaults for missing values
 	applyDefaults(&config)
-	
+
 	// Validate the configuration
 	if err := config.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
-	
+
 	return &config, nil
 }
 
@@ -350,14 +350,14 @@ func defaultConfig() *Config {
 			CacheTTL:        "1h",
 		},
 	}
-	
+
 	return config
 }
 
 // applyDefaults fills in missing values with defaults
 func applyDefaults(config *Config) {
 	defaults := defaultConfig()
-	
+
 	// Apply default values for zero/empty fields
 	if config.Defaults.MaxResults == 0 {
 		config.Defaults.MaxResults = defaults.Defaults.MaxResults
@@ -371,28 +371,28 @@ func applyDefaults(config *Config) {
 	if config.Defaults.SortBy == "" {
 		config.Defaults.SortBy = defaults.Defaults.SortBy
 	}
-	
+
 	if config.Output.ColorMode == "" {
 		config.Output.ColorMode = defaults.Output.ColorMode
 	}
 	if config.Output.MaxContentLines == 0 {
 		config.Output.MaxContentLines = defaults.Output.MaxContentLines
 	}
-	
+
 	if config.Analysis.MinPatternCount == 0 {
 		config.Analysis.MinPatternCount = defaults.Analysis.MinPatternCount
 	}
 	if config.Analysis.PatternThreshold == 0 {
 		config.Analysis.PatternThreshold = defaults.Analysis.PatternThreshold
 	}
-	
+
 	if config.GitHub.Timeout == "" {
 		config.GitHub.Timeout = defaults.GitHub.Timeout
 	}
 	if config.GitHub.CacheTTL == "" {
 		config.GitHub.CacheTTL = defaults.GitHub.CacheTTL
 	}
-	
+
 	// Initialize maps if nil
 	if config.SavedSearches == nil {
 		config.SavedSearches = make(map[string]SavedSearch)

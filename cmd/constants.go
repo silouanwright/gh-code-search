@@ -148,10 +148,10 @@ var ValidOutputFormats = []string{
 	OutputFormatCompact,
 }
 
-// ValidSortOptions contains all valid sort options  
+// ValidSortOptions contains all valid sort options
 var ValidSortOptions = []string{
 	"relevance",
-	"stars", 
+	"stars",
 	"updated",
 	"created",
 }

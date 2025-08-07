@@ -41,7 +41,7 @@ ranking based on repository quality indicators.`,
 
   # Search multiple organizations
   gh code-search "eslint.config.js" --owner microsoft --owner google
-  
+
   # Topic-based search workflow (combine with gh search repos)
   gh search repos --topic=react --json fullName -q '.[] | .fullName' > repos.txt
   gh code-search "hooks" --repos $(cat repos.txt | tr '\n' ',')`,
@@ -65,21 +65,21 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "disable colored output")
 
 	// Mark flags as hidden if they're primarily for debugging
-	rootCmd.PersistentFlags().MarkHidden("dry-run")
+	_ = rootCmd.PersistentFlags().MarkHidden("dry-run")
 }
 
 // initConfig reads in config file and ENV variables if set
 func initConfig() {
 	var cfg *config.Config
 	var err error
-	
+
 	// Load configuration from specified file or defaults
 	if configFile != "" {
 		cfg, err = config.LoadFromFile(configFile)
 	} else {
 		cfg, err = config.Load()
 	}
-	
+
 	if err != nil {
 		if verbose {
 			fmt.Fprintf(os.Stderr, "Config load failed, using defaults: %v\n", err)
@@ -87,10 +87,10 @@ func initConfig() {
 		// Load() already returns default config on failure, but we need a fallback
 		cfg, _ = config.Load() // This will return defaults if no config exists
 	}
-	
+
 	// Apply configuration defaults to CLI flags if not explicitly set
 	applyConfigDefaults(cfg)
-	
+
 	if verbose {
 		configPath := configFile
 		if configPath == "" {
@@ -105,33 +105,33 @@ func applyConfigDefaults(cfg *config.Config) {
 	// Only apply config values if CLI flags weren't explicitly set
 	// Note: This is a simplified implementation. Full implementation would check
 	// if flags were explicitly set vs using defaults.
-	
+
 	// Apply search defaults
 	if searchLimit == 50 && cfg.Defaults.MaxResults > 0 {
 		searchLimit = cfg.Defaults.MaxResults
 	}
-	
+
 	if outputFormat == "default" && cfg.Defaults.OutputFormat != "" {
 		outputFormat = cfg.Defaults.OutputFormat
 	}
-	
+
 	if searchLanguage == "" && cfg.Defaults.Language != "" {
 		searchLanguage = cfg.Defaults.Language
 	}
-	
+
 	if len(searchRepo) == 0 && len(cfg.Defaults.Repositories) > 0 {
 		searchRepo = cfg.Defaults.Repositories
 	}
-	
+
 	if minStars == 0 && cfg.Defaults.MinStars > 0 {
 		minStars = cfg.Defaults.MinStars
 	}
-	
+
 	// Apply output settings
 	if !noColor && cfg.Output.ColorMode == "never" {
 		noColor = true
 	}
-	
+
 	// Note: Additional config applications can be added here as needed
 	// This covers the most commonly used configuration options
 }

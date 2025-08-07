@@ -32,7 +32,6 @@ var (
 	contextLines    int
 	outputFormat    string
 	outputFile      string // New: export to file
-	saveAs          string
 	pipe            bool
 	minStars        int
 	sort            string
@@ -60,26 +59,26 @@ ranking based on repository quality indicators.`,
   gh code-search "tsconfig.json" --language json --limit 10
   gh code-search "vite.config" --language javascript --context 30
   gh code-search "dockerfile" --filename dockerfile --repo "**/react"
-  
+
   # Page-based search (API efficient for large datasets)
   gh code-search "config" --page 1 --limit 100        # Get first 100 results
   gh code-search "config" --page 2 --limit 100        # Get next 100 results
   gh code-search "config" --page 3 --limit 50         # Get results 201-250
-  
+
   # Organization/owner-specific searches
   gh code-search "eslint.config.js" --owner microsoft --language javascript
   gh code-search "next.config.js" --owner vercel --page 1 --limit 50
   gh code-search "interface" --owner google --owner facebook --language typescript
-  
+
   # Topic-based workflow (find repos by topic, then search code)
   gh search repos --topic=react --stars=">1000" --json fullName | jq -r '.[].fullName' > react-repos.txt
   gh code-search "useState" --repos $(cat react-repos.txt | tr '\n' ',')
-  
+
   # Multi-repository batch searches (Phase 2)
   gh code-search "docker-compose.yml" --repos microsoft/vscode,facebook/react,vercel/next.js --aggregate
   gh code-search "tsconfig.json" --orgs microsoft,google,facebook --min-stars 500 --compare
   gh code-search "webpack OR vite" --repos facebook/*,vercel/* --compare
-  
+
   # Auto-pagination (less API efficient but convenient)
   gh code-search "hooks" --limit 200                  # Automatically fetches 2 pages
 
@@ -138,40 +137,40 @@ func runSearch(cmd *cobra.Command, args []string) error {
 func buildSearchQuery(terms []string) string {
 	// Use existing QueryBuilder to eliminate code duplication
 	qb := search.NewQueryBuilder(terms)
-	
+
 	// Apply all CLI flags using the QueryBuilder methods
 	if searchLanguage != "" {
 		qb = qb.WithLanguage(searchLanguage)
 	}
-	
+
 	if searchFilename != "" {
 		qb = qb.WithFilename(searchFilename)
 	}
-	
+
 	if searchExtension != "" {
 		qb = qb.WithExtension(searchExtension)
 	}
-	
+
 	if len(searchRepo) > 0 {
 		qb = qb.WithRepositories(searchRepo)
 	}
-	
+
 	if searchPath != "" {
 		qb = qb.WithPath(searchPath)
 	}
-	
+
 	if len(searchOwner) > 0 {
 		qb = qb.WithOwners(searchOwner)
 	}
-	
+
 	if searchSize != "" {
 		qb = qb.WithSize(searchSize)
 	}
-	
+
 	if minStars > 0 {
 		qb = qb.WithMinStars(minStars)
 	}
-	
+
 	return qb.Build()
 }
 
@@ -181,7 +180,7 @@ func executeSearch(ctx context.Context, query string) (*github.SearchResults, er
 	if searchPage > 0 {
 		return executeSinglePageSearch(ctx, query)
 	}
-	
+
 	// Otherwise, use automatic pagination for high limits (legacy behavior)
 	return executeAutoPageSearch(ctx, query)
 }
@@ -213,14 +212,14 @@ func executeSinglePageSearch(ctx context.Context, query string) (*github.SearchR
 		if results.Total != nil && *results.Total > 0 {
 			totalPages = (*results.Total + GitHubMaxResultsPerPage - 1) / GitHubMaxResultsPerPage
 		}
-		fmt.Printf("📄 Page %d of ~%d (%d results on this page)\n", 
+		fmt.Printf("📄 Page %d of ~%d (%d results on this page)\n",
 			searchPage, totalPages, len(results.Items))
 	}
 
 	return results, nil
 }
 
-// executeAutoPageSearch automatically paginates for high limits (legacy behavior) 
+// executeAutoPageSearch automatically paginates for high limits (legacy behavior)
 func executeAutoPageSearch(ctx context.Context, query string) (*github.SearchResults, error) {
 	// Initialize rate limiter if not set
 	if searchRateLimiter == nil {
@@ -316,7 +315,7 @@ func outputResults(results *github.SearchResults) error {
 		case "json":
 			output, err = formatJSONResults(results)
 		case "markdown":
-			output, err = formatMarkdownResults(results) 
+			output, err = formatMarkdownResults(results)
 		case "compact":
 			output, err = formatCompactResults(results)
 		case "default", "":
@@ -346,37 +345,37 @@ func detectLanguage(path string) string {
 	if lang, ok := LanguageExtensionMap[ext]; ok {
 		return lang
 	}
-	
+
 	// Special case for Dockerfile (no extension)
 	if strings.Contains(strings.ToLower(filepath.Base(path)), "dockerfile") {
 		return LanguageDockerfile
 	}
-	
+
 	return ""
 }
 
 // formatPipeResults formats results for pipe output
 func formatPipeResults(results *github.SearchResults) (string, error) {
 	var output strings.Builder
-	
+
 	for _, item := range results.Items {
 		if item.Repository.FullName != nil && item.Path != nil && item.HTMLURL != nil {
 			output.WriteString(fmt.Sprintf("%s:%s:%s\n", *item.Repository.FullName, *item.Path, *item.HTMLURL))
 		}
 	}
-	
+
 	return output.String(), nil
 }
 
 // formatDefaultResults formats results for default output
 func formatDefaultResults(results *github.SearchResults) (string, error) {
 	var output strings.Builder
-	
+
 	// Show pagination-aware results summary
 	if results.Total != nil {
 		totalResults := *results.Total
 		displayedCount := len(results.Items)
-		
+
 		// Calculate result range based on pagination
 		var startResult, endResult int
 		if searchPage > 0 {
@@ -388,15 +387,15 @@ func formatDefaultResults(results *github.SearchResults) (string, error) {
 			startResult = 1
 			endResult = displayedCount
 		}
-		
+
 		// Format the pagination-aware header
 		if totalResults > displayedCount {
-			output.WriteString(fmt.Sprintf("🔍 Found %d total results (showing %d-%d)\n\n", 
+			output.WriteString(fmt.Sprintf("🔍 Found %d total results (showing %d-%d)\n\n",
 				totalResults, startResult, endResult))
 		} else {
 			output.WriteString(fmt.Sprintf("🔍 Found %d results\n\n", totalResults))
 		}
-		
+
 		// Add pagination guidance if there are more results
 		if totalResults > endResult {
 			remainingResults := totalResults - endResult
@@ -404,8 +403,8 @@ func formatDefaultResults(results *github.SearchResults) (string, error) {
 			if searchPage == 0 {
 				nextPage = 2 // Auto pagination starts at page 1, next is page 2
 			}
-			
-			output.WriteString(fmt.Sprintf("💡 **%d more results available** - Use `--page %d` to see results %d-%d\n\n", 
+
+			output.WriteString(fmt.Sprintf("💡 **%d more results available** - Use `--page %d` to see results %d-%d\n\n",
 				remainingResults, nextPage, endResult+1, min(totalResults, endResult+searchLimit)))
 		}
 	}
@@ -518,13 +517,13 @@ func init() {
 	// searchCmd.Flags().StringVar(&saveAs, "save", "", "save search with given name")
 
 	// Set flag usage examples
-	searchCmd.Flags().SetAnnotation("language", "examples", []string{"typescript", "go", "python", "javascript"})
-	searchCmd.Flags().SetAnnotation("repo", "examples", []string{"facebook/react", "microsoft/vscode", "**/typescript"})
-	searchCmd.Flags().SetAnnotation("filename", "examples", []string{"package.json", "tsconfig.json", "Dockerfile"})
-	searchCmd.Flags().SetAnnotation("extension", "examples", []string{"ts", "go", "py", "js"})
-	searchCmd.Flags().SetAnnotation("size", "examples", []string{">1000", "<500", "100..200"})
-	searchCmd.Flags().SetAnnotation("repos", "examples", []string{"microsoft/vscode,facebook/react", "vercel/*,netlify/*"})
-	searchCmd.Flags().SetAnnotation("orgs", "examples", []string{"microsoft,google,facebook", "vercel,netlify"})
+	_ = searchCmd.Flags().SetAnnotation("language", "examples", []string{"typescript", "go", "python", "javascript"})
+	_ = searchCmd.Flags().SetAnnotation("repo", "examples", []string{"facebook/react", "microsoft/vscode", "**/typescript"})
+	_ = searchCmd.Flags().SetAnnotation("filename", "examples", []string{"package.json", "tsconfig.json", "Dockerfile"})
+	_ = searchCmd.Flags().SetAnnotation("extension", "examples", []string{"ts", "go", "py", "js"})
+	_ = searchCmd.Flags().SetAnnotation("size", "examples", []string{">1000", "<500", "100..200"})
+	_ = searchCmd.Flags().SetAnnotation("repos", "examples", []string{"microsoft/vscode,facebook/react", "vercel/*,netlify/*"})
+	_ = searchCmd.Flags().SetAnnotation("orgs", "examples", []string{"microsoft,google,facebook", "vercel,netlify"})
 }
 
 // formatJSONResults formats search results as JSON with pagination metadata
@@ -536,12 +535,12 @@ func formatJSONResults(results *github.SearchResults) (string, error) {
 	}{
 		SearchResults: results,
 	}
-	
+
 	// Add pagination metadata if available
 	if results.Total != nil {
 		totalResults := *results.Total
 		displayedCount := len(results.Items)
-		
+
 		var startResult, endResult int
 		if searchPage > 0 {
 			startResult = ((searchPage - 1) * searchLimit) + 1
@@ -550,7 +549,7 @@ func formatJSONResults(results *github.SearchResults) (string, error) {
 			startResult = 1
 			endResult = displayedCount
 		}
-		
+
 		enhancedResults.Pagination = &PaginationInfo{
 			TotalResults:     totalResults,
 			DisplayedResults: displayedCount,
@@ -560,12 +559,12 @@ func formatJSONResults(results *github.SearchResults) (string, error) {
 			PerPage:          searchLimit,
 			HasNextPage:      totalResults > endResult,
 		}
-		
+
 		if enhancedResults.Pagination.HasNextPage {
 			enhancedResults.Pagination.NextPage = enhancedResults.Pagination.CurrentPage + 1
 		}
 	}
-	
+
 	data, err := json.MarshalIndent(enhancedResults, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal JSON: %w", err)
@@ -576,13 +575,13 @@ func formatJSONResults(results *github.SearchResults) (string, error) {
 // formatMarkdownResults formats search results as Markdown
 func formatMarkdownResults(results *github.SearchResults) (string, error) {
 	var builder strings.Builder
-	
+
 	if results.Total != nil {
 		builder.WriteString(fmt.Sprintf("# Search Results (%d total)\n\n", *results.Total))
 	} else {
 		builder.WriteString("# Search Results\n\n")
 	}
-	
+
 	for i, item := range results.Items {
 		path := ""
 		if item.Path != nil {
@@ -596,14 +595,14 @@ func formatMarkdownResults(results *github.SearchResults) (string, error) {
 		if item.HTMLURL != nil {
 			htmlURL = *item.HTMLURL
 		}
-		
+
 		builder.WriteString(fmt.Sprintf("## %d. %s\n\n", i+1, path))
 		builder.WriteString(fmt.Sprintf("**Repository:** %s\n", fullName))
 		if item.Repository.Description != nil && *item.Repository.Description != "" {
 			builder.WriteString(fmt.Sprintf("**Description:** %s\n", *item.Repository.Description))
 		}
 		builder.WriteString(fmt.Sprintf("**URL:** %s\n\n", htmlURL))
-		
+
 		if len(item.TextMatches) > 0 {
 			builder.WriteString("**Code:**\n\n```")
 			if item.Repository.Language != nil && *item.Repository.Language != "" {
@@ -619,32 +618,32 @@ func formatMarkdownResults(results *github.SearchResults) (string, error) {
 		}
 		builder.WriteString("---\n\n")
 	}
-	
+
 	return builder.String(), nil
 }
 
 // formatCompactResults formats search results in compact format
 func formatCompactResults(results *github.SearchResults) (string, error) {
 	var builder strings.Builder
-	
+
 	// Add pagination info for compact format too
 	if results.Total != nil {
 		totalResults := *results.Total
 		displayedCount := len(results.Items)
-		
+
 		if searchPage > 0 {
 			startResult := ((searchPage - 1) * searchLimit) + 1
 			endResult := startResult + displayedCount - 1
 			if totalResults > displayedCount {
-				builder.WriteString(fmt.Sprintf("# Results %d-%d of %d total\n", 
+				builder.WriteString(fmt.Sprintf("# Results %d-%d of %d total\n",
 					startResult, endResult, totalResults))
 			}
 		} else if totalResults > displayedCount {
-			builder.WriteString(fmt.Sprintf("# Results 1-%d of %d total\n", 
+			builder.WriteString(fmt.Sprintf("# Results 1-%d of %d total\n",
 				displayedCount, totalResults))
 		}
 	}
-	
+
 	for _, item := range results.Items {
 		fullName := ""
 		if item.Repository.FullName != nil {
@@ -656,14 +655,14 @@ func formatCompactResults(results *github.SearchResults) (string, error) {
 		}
 		builder.WriteString(fmt.Sprintf("%s:%s\n", fullName, path))
 	}
-	
+
 	return builder.String(), nil
 }
 
 // executeBatchRepoSearch handles multi-repository search with aggregation (Phase 2)
 func executeBatchRepoSearch(ctx context.Context, args []string) error {
 	query := strings.Join(args, " ")
-	
+
 	if dryRun {
 		fmt.Printf("Would execute batch search: %s\n", query)
 		if len(batchRepos) > 0 {
@@ -677,10 +676,10 @@ func executeBatchRepoSearch(ctx context.Context, args []string) error {
 
 	// Collect all target repositories
 	var targetRepos []string
-	
+
 	// Add explicit repos
 	targetRepos = append(targetRepos, batchRepos...)
-	
+
 	// Add repos from organizations (simplified - in real implementation would use GitHub API)
 	for _, org := range batchOrgs {
 		if strings.Contains(org, "*") {
@@ -707,7 +706,7 @@ func executeBatchRepoSearch(ctx context.Context, args []string) error {
 		}
 
 		// Build query with repository filter (commented out - using QueryBuilder instead)
-		
+
 		// Apply other filters
 		qb := search.NewQueryBuilder([]string{query})
 		if searchLanguage != "" {
@@ -728,7 +727,7 @@ func executeBatchRepoSearch(ctx context.Context, args []string) error {
 		if minStars > 0 {
 			qb = qb.WithMinStars(minStars)
 		}
-		
+
 		// Add repository filter
 		qb = qb.WithRepositories([]string{repoPattern})
 		finalQuery := qb.Build()
@@ -807,20 +806,20 @@ func outputBatchComparison(results *github.SearchResults, repos []string) error 
 	fmt.Printf("## Results by Repository\n\n")
 	for repo, items := range repoResults {
 		fmt.Printf("### %s (%d results)\n", repo, len(items))
-		
+
 		// Show top 3 results per repository
 		maxShow := 3
 		if len(items) < maxShow {
 			maxShow = len(items)
 		}
-		
+
 		for i := 0; i < maxShow; i++ {
 			item := items[i]
 			if item.Path != nil && item.HTMLURL != nil {
 				fmt.Printf("- **%s** - [View](%s)\n", *item.Path, *item.HTMLURL)
 			}
 		}
-		
+
 		if len(items) > maxShow {
 			fmt.Printf("- ... and %d more results\n", len(items)-maxShow)
 		}
@@ -831,7 +830,7 @@ func outputBatchComparison(results *github.SearchResults, repos []string) error 
 	fmt.Printf("## Analysis\n")
 	fmt.Printf("- **Repositories with results**: %d\n", len(repoResults))
 	fmt.Printf("- **Average results per repository**: %.1f\n", float64(len(results.Items))/float64(len(repoResults)))
-	
+
 	return nil
 }
 

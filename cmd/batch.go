@@ -386,7 +386,7 @@ func generateComparisons(results []BatchSearchResult) []BatchComparisonResult {
 	// This can be expanded with more sophisticated analysis
 	searchNames := make([]string, len(results))
 	totalResults := 0
-	
+
 	for i, result := range results {
 		searchNames[i] = result.Name
 		totalResults += result.ResultCount
@@ -426,7 +426,7 @@ func hasFilters(filters search.SearchFilters) bool {
 func outputBatchResults(results *BatchResults, outputConfig BatchOutputConfig) error {
 	// For now, output in JSON format to stdout
 	// This can be expanded to support different formats and file output
-	
+
 	if verbose {
 		fmt.Printf("\nBatch search completed successfully!\n")
 		fmt.Printf("Total searches: %d\n", results.SearchCount)
@@ -451,13 +451,13 @@ func outputBatchResults(results *BatchResults, outputConfig BatchOutputConfig) e
 		if len(result.Tags) > 0 {
 			fmt.Printf("**Tags:** %s\n", strings.Join(result.Tags, ", "))
 		}
-		
+
 		// Show top results
 		maxShow := 3
 		if len(result.Results.Items) < maxShow {
 			maxShow = len(result.Results.Items)
 		}
-		
+
 		for j := 0; j < maxShow; j++ {
 			item := result.Results.Items[j]
 			if item.Repository.FullName != nil && item.Path != nil {
@@ -468,7 +468,7 @@ func outputBatchResults(results *BatchResults, outputConfig BatchOutputConfig) e
 				fmt.Printf("- **%s** (%s) ⭐ %d\n", *item.Path, *item.Repository.FullName, stars)
 			}
 		}
-		
+
 		if len(result.Results.Items) > maxShow {
 			fmt.Printf("- ... and %d more results\n", len(result.Results.Items)-maxShow)
 		}
@@ -481,7 +481,7 @@ func outputBatchResults(results *BatchResults, outputConfig BatchOutputConfig) e
 		for _, comparison := range results.Comparisons {
 			fmt.Printf("### %s\n", comparison.Name)
 			fmt.Printf("%s\n\n", comparison.Summary)
-			
+
 			if len(comparison.CommonPatterns) > 0 {
 				fmt.Printf("**Common Patterns:**\n")
 				for _, pattern := range comparison.CommonPatterns {
@@ -489,7 +489,7 @@ func outputBatchResults(results *BatchResults, outputConfig BatchOutputConfig) e
 				}
 				fmt.Println()
 			}
-			
+
 			if len(comparison.KeyDifferences) > 0 {
 				fmt.Printf("**Key Differences:**\n")
 				for _, diff := range comparison.KeyDifferences {

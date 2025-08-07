@@ -60,7 +60,7 @@ type RetryableFunc func() error
 // WithRetry executes a function with intelligent retry and exponential backoff
 func (rl *RateLimiter) WithRetry(ctx context.Context, operation string, fn RetryableFunc) error {
 	var lastErr error
-	
+
 	for attempt := 0; attempt <= rl.maxRetries; attempt++ {
 		// Check context cancellation before each attempt
 		if ctx.Err() != nil {
@@ -232,7 +232,7 @@ func (rl *RateLimiter) formatFinalError(operation string, err error) error {
 // IntelligentDelay provides smart delays between batch operations
 func (rl *RateLimiter) IntelligentDelay(ctx context.Context, complexity OperationComplexity) error {
 	delay := rl.calculateIntelligentDelay(complexity)
-	
+
 	if delay == 0 {
 		return nil
 	}
@@ -297,7 +297,7 @@ func ParseRetryAfterHeader(header http.Header) time.Duration {
 func EstimateComplexity(query string, maxResults int, hasFilters bool) OperationComplexity {
 	// Simple heuristic for operation complexity
 	score := 0
-	
+
 	// Query complexity
 	if len(strings.Fields(query)) > 3 {
 		score++

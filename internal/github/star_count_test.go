@@ -56,7 +56,7 @@ func TestRepositoryEnrichment(t *testing.T) {
 
 		client := &RealClient{}
 		client.enrichRepositoryMetadata(context.Background(), results)
-		
+
 		// Should remain nil
 		assert.Nil(t, results.Items[0].Repository.StargazersCount)
 	})
@@ -104,7 +104,7 @@ func TestConvertRepositoryWithNilStarCount(t *testing.T) {
 				assert.NotNil(t, result.StargazersCount)
 				assert.Equal(t, *tt.expectedStars, *result.StargazersCount)
 			}
-			
+
 			// Verify other fields are preserved
 			assert.Equal(t, *tt.inputRepo.FullName, *result.FullName)
 		})

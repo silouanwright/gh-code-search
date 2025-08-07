@@ -1,8 +1,8 @@
 # gh-code-search Development Guide
 
-**Project**: Convert ghx to gh-code-search (GitHub CLI Extension)  
-**Goal**: Professional-grade GitHub code search with configuration discovery workflows  
-**Target Quality**: Match gh-comment's 85% test coverage and production standards  
+**Project**: Convert ghx to gh-code-search (GitHub CLI Extension)
+**Goal**: Professional-grade GitHub code search with configuration discovery workflows
+**Target Quality**: Match gh-comment's 85% test coverage and production standards
 
 ## 🎯 **Project Overview**
 
@@ -10,7 +10,7 @@ gh-code-search transforms GitHub code search from a basic utility into a powerfu
 
 ### **Core Value Proposition**
 - **Configuration Discovery**: Find working configs across millions of GitHub repos
-- **Pattern Analysis**: Identify common patterns and best practices  
+- **Pattern Analysis**: Identify common patterns and best practices
 - **AI Integration**: Feed concrete examples to AI for better assistance
 - **Developer Workflow**: Seamless integration into development process
 
@@ -29,7 +29,7 @@ test/index.test.ts   # Basic integration tests
 main.go              # Entry point
 cmd/
 ├── root.go          # Root command & global flags
-├── search.go        # Main search command  
+├── search.go        # Main search command
 ├── patterns.go      # Pattern analysis command
 ├── saved.go         # Saved searches command
 ├── compare.go       # Configuration comparison
@@ -51,7 +51,7 @@ internal/
 3. **Command Structure**: Multiple focused commands vs single monolithic command
 4. **Testing Foundation**: 80%+ test coverage from day one
 
-### **Phase 2: Enhanced Features (4-6 weeks)**  
+### **Phase 2: Enhanced Features (4-6 weeks)**
 1. **Smart Ranking**: Quality-based result sorting
 2. **Pattern Analysis**: Common configuration pattern detection
 3. **Saved Searches**: Organization and caching system
@@ -59,7 +59,7 @@ internal/
 
 ### **Phase 3: AI Integration (6-8 weeks)**
 1. **Template Generation**: Create configs from patterns
-2. **AI Workflow Integration**: Direct pipeline to AI assistance  
+2. **AI Workflow Integration**: Direct pipeline to AI assistance
 3. **Advanced Analytics**: Deep pattern analysis
 4. **Enterprise Features**: Team sharing, organization insights
 
@@ -78,7 +78,7 @@ type RealClient struct {
     restClient *github.Client
 }
 
-// Mock for testing  
+// Mock for testing
 type MockClient struct {
     searchResults map[string]*SearchResults
     errors        map[string]error
@@ -113,15 +113,15 @@ func runSearch(cmd *cobra.Command, args []string) error {
 // Following gh-comment's formatActionableError pattern
 func handleSearchError(err error, query string) error {
     errMsg := err.Error()
-    
+
     if strings.Contains(errMsg, "rate limit") {
         return fmt.Errorf("GitHub search rate limit exceeded: %w\n\n💡 Solutions:\n  • Wait %s for rate limit reset\n  • Use more specific search terms to reduce results\n  • Add --repo filter to search specific repositories", err, getRateLimitResetTime())
     }
-    
+
     if strings.Contains(errMsg, "invalid query") {
         return fmt.Errorf("invalid search query: %w\n\n💡 GitHub Search Tips:\n  • Use quotes for exact phrases: \"exact match\"\n  • Combine terms: config AND typescript\n  • Use qualifiers: language:go filename:main.go", err)
     }
-    
+
     return fmt.Errorf("search failed: %w", err)
 }
 ```
@@ -151,7 +151,7 @@ func TestSearchCommand(t *testing.T) {
         },
         // More test cases...
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             // Test implementation
@@ -169,9 +169,9 @@ type Config struct {
         MaxResults int    `yaml:"max_results" json:"max_results"`
         Context    int    `yaml:"context_lines" json:"context_lines"`
     } `yaml:"defaults" json:"defaults"`
-    
+
     Saved map[string]SavedSearch `yaml:"saved" json:"saved"`
-    
+
     Output struct {
         Format string `yaml:"format" json:"format"`
         Editor string `yaml:"editor" json:"editor"`
@@ -197,7 +197,7 @@ gh code-search --help                             # Comprehensive help
 ### **Subcommands Following gh-comment Pattern**
 ```bash
 gh code-search patterns <query>                   # Analyze common patterns
-gh code-search save <name> <query> [flags]       # Save search for reuse  
+gh code-search save <name> <query> [flags]       # Save search for reuse
 gh code-search list                               # List saved searches
 gh code-search compare <file1> <file2>           # Compare configurations
 gh code-search template <query> --output <file>  # Generate template from patterns
@@ -206,7 +206,7 @@ gh code-search template <query> --output <file>  # Generate template from patter
 ### **Global Flags (Consistent with gh-comment)**
 ```bash
 --repo <owner/repo>          # Filter by repository
---language <lang>            # Filter by language  
+--language <lang>            # Filter by language
 --filename <name>            # Filter by filename
 --extension <ext>            # Filter by extension
 --limit <n>                  # Max results (default: 50)
@@ -234,7 +234,7 @@ func TestSearchFilters(t *testing.T) { /* ... */ }
 func TestPatternAnalysis(t *testing.T) { /* ... */ }
 func TestResultRanking(t *testing.T) { /* ... */ }
 
-// Integration Tests - End-to-end workflows  
+// Integration Tests - End-to-end workflows
 func TestSearchWorkflow(t *testing.T) { /* ... */ }
 func TestSavedSearches(t *testing.T) { /* ... */ }
 
@@ -258,7 +258,7 @@ func BenchmarkPatternAnalysis(b *testing.B) { /* ... */ }
 4. ✅ Test framework and initial coverage
 5. ✅ Error handling system
 
-### **Week 3-4: Core Features** 
+### **Week 3-4: Core Features**
 1. ✅ Advanced filtering (repo, language, filename, etc.)
 2. ✅ Output formatting (markdown, JSON)
 3. ✅ Configuration management
@@ -267,7 +267,7 @@ func BenchmarkPatternAnalysis(b *testing.B) { /* ... */ }
 
 ### **Week 5-6: Enhancement**
 1. ✅ Pattern analysis engine
-2. ✅ Result ranking algorithms  
+2. ✅ Result ranking algorithms
 3. ✅ Comparison functionality
 4. ✅ Template generation
 5. ✅ Performance optimization
@@ -300,7 +300,7 @@ func BenchmarkPatternAnalysis(b *testing.B) { /* ... */ }
 
 ### **Technical Excellence**
 - **Test Coverage**: 85%+ (match gh-comment)
-- **Performance**: <2s for typical searches  
+- **Performance**: <2s for typical searches
 - **Reliability**: Intelligent error handling for all failure modes
 - **Maintainability**: Clean, modular, well-documented code
 
