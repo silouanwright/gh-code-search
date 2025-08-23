@@ -12,7 +12,7 @@ type GitHubAPI interface {
 	GetRateLimit(ctx context.Context) (*RateLimit, error)
 }
 
-// SearchOptions configures code search requests
+// SearchOptions configures search requests
 type SearchOptions struct {
 	Sort        string // relevance, indexed, created, updated
 	Order       string // asc, desc
@@ -25,14 +25,14 @@ type ListOptions struct {
 	PerPage int
 }
 
-// SearchResults represents GitHub code search results
+// SearchResults represents GitHub search results
 type SearchResults struct {
 	Total             *int          `json:"total_count,omitempty"`
 	IncompleteResults *bool         `json:"incomplete_results,omitempty"`
 	Items             []SearchItem  `json:"items,omitempty"`
 }
 
-// SearchItem represents a single code search result
+// SearchItem represents a single search result
 type SearchItem struct {
 	Name        *string     `json:"name,omitempty"`
 	Path        *string     `json:"path,omitempty"`

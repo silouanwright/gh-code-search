@@ -19,7 +19,7 @@ var (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "gh-code-search",
-	Short: "GitHub code search with intelligent filtering and analysis",
+	Short: "GitHub search with intelligent filtering and analysis",
 	Long: `Search GitHub's vast codebase to find working examples and configurations.
 
 Perfect for discovering real-world usage patterns, configuration examples,

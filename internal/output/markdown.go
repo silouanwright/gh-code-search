@@ -60,7 +60,7 @@ func (f *MarkdownFormatter) Format(results *github.SearchResults, query string) 
 
 // writeHeader writes the markdown header with search summary
 func (f *MarkdownFormatter) writeHeader(buf *strings.Builder, results *github.SearchResults, query string) {
-	buf.WriteString("# GitHub Code Search Results\n\n")
+	buf.WriteString("# GitHub Search Results\n\n")
 
 	// Search query info
 	buf.WriteString(fmt.Sprintf("**Query**: `%s`  \n", query))

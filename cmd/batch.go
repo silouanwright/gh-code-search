@@ -78,7 +78,7 @@ var batchCmd = &cobra.Command{
 	Use:   "batch <config-file>",
 	Short: "Execute multiple searches from a YAML configuration file",
 	Long: heredoc.Doc(`
-		Execute multiple GitHub code searches from a YAML configuration file.
+		Execute multiple GitHub searches from a YAML configuration file.
 
 		This enables powerful workflows like configuration discovery, pattern analysis,
 		and comparative searches across different repositories or technologies.

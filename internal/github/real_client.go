@@ -66,7 +66,7 @@ func (c *RealClient) SearchCode(ctx context.Context, query string, opts *SearchO
 	// Convert the result to our format
 	searchResults := convertSearchResults(result)
 
-	// Enrich repository metadata if star counts are missing (Code Search API limitation)
+	// Enrich repository metadata if star counts are missing (Search API limitation)
 	// This is optional and can be disabled via environment variable
 	if os.Getenv("GH_CODE_SEARCH_DISABLE_REPO_ENRICHMENT") == "" {
 		c.enrichRepositoryMetadata(ctx, searchResults)
@@ -241,8 +241,8 @@ func convertRepository(repo *github.Repository) Repository {
 		pushedAt = &repo.PushedAt.Time
 	}
 
-	// Handle star count conversion - GitHub Code Search API sometimes doesn't include star counts
-	// This is a known limitation of the Code Search API vs Repository Search API
+	// Handle star count conversion - GitHub Search API sometimes doesn't include star counts
+	// This is a known limitation of the Search API vs Repository Search API
 	var starCount *int
 	if repo.StargazersCount != nil {
 		starCount = repo.StargazersCount
@@ -325,7 +325,7 @@ func getStringFromPtr(ptr *string) string {
 }
 
 // enrichRepositoryMetadata fetches missing repository metadata (like star counts)
-// that are not included in Code Search API responses
+// that are not included in Search API responses
 func (c *RealClient) enrichRepositoryMetadata(ctx context.Context, results *SearchResults) {
 	if results == nil || len(results.Items) == 0 {
 		return

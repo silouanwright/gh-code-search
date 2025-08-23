@@ -1,7 +1,7 @@
 # gh-scout Command Specification
 
 **Based on**: gh-comment's command patterns and UX excellence
-**Goal**: Intuitive, powerful GitHub code search with professional workflows
+**Goal**: Intuitive, powerful GitHub search with professional workflows
 **Style**: Consistent with GitHub CLI conventions and gh-comment patterns
 
 ## 🎯 **Command Philosophy**

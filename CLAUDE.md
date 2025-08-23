@@ -1,7 +1,7 @@
 # CLAUDE.md - Development Context
 
 ## Project Overview
-gh-scout is a professional GitHub CLI extension for code search and configuration discovery, migrating from the ghx TypeScript monolith to a production-grade Go implementation.
+gh-scout is a professional GitHub CLI extension for configuration discovery and search functionality, migrating from the ghx TypeScript monolith to a production-grade Go implementation.
 
 ## Key Reference Materials
 - **Gold Standard**: ~/repos/gh-comment - Use as the reference for architecture patterns, testing strategies, and CLI UX excellence
@@ -55,7 +55,7 @@ All critical architecture tasks complete. Codebase is production-ready with exce
 
 ## NEXT PRIORITY 🚀
 
-With the batch operations system complete, gh-scout is now positioned as the definitive tool for GitHub code search and configuration discovery. The next focus is performance optimization:
+With the batch operations system complete, gh-scout is now positioned as the definitive tool for GitHub search and configuration discovery. The next focus is performance optimization:
 
 ### **PRIORITY: Enhanced Rate Limiting & Performance** ⚡
 **Objective**: Optimize API usage and add intelligent rate limiting
@@ -65,7 +65,7 @@ With the batch operations system complete, gh-scout is now positioned as the def
 - Better handling of GitHub API rate limits during large batch operations
 - **Estimated effort**: 3-4 hours
 
-**Current State**: gh-scout is production-ready with excellent batch operations, making it the most powerful GitHub code search tool available.
+**Current State**: gh-scout is production-ready with excellent batch operations, making it the most powerful GitHub search tool available.
 
 **Next Focus**: Optimize performance and API usage for large-scale batch operations.
 
@@ -132,7 +132,7 @@ find . -name "*.go" -exec grep -l "os.Create\|WriteFile" {} \;  # File permissio
 
 ## DEVELOPER CONTEXT 👋
 
-**Current State**: Production-ready codebase with excellent architecture, comprehensive test coverage, and professional UX. **BATCH OPERATIONS SYSTEM COMPLETE** - now the definitive GitHub code search tool.
+**Current State**: Production-ready codebase with excellent architecture, comprehensive test coverage, and professional UX. **BATCH OPERATIONS SYSTEM COMPLETE** - now the definitive GitHub search tool.
 
 **Ready For**: Performance optimization and enhanced rate limiting for batch operations.
 

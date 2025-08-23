@@ -34,7 +34,7 @@ func TestMarkdownFormatter_Format(t *testing.T) {
 
 	output, err := formatter.Format(emptyResults, "test query")
 	require.NoError(t, err)
-	assert.Contains(t, output, "# GitHub Code Search Results")
+	assert.Contains(t, output, "# GitHub Search Results")
 	assert.Contains(t, output, "Query**: `test query`")
 	assert.Contains(t, output, "No results found")
 	assert.Contains(t, output, "Suggestions:")
@@ -44,7 +44,7 @@ func TestMarkdownFormatter_Format(t *testing.T) {
 	output, err = formatter.Format(results, "useState")
 	require.NoError(t, err)
 
-	assert.Contains(t, output, "# GitHub Code Search Results")
+	assert.Contains(t, output, "# GitHub Search Results")
 	assert.Contains(t, output, "Query**: `useState`")
 	assert.Contains(t, output, "Found 2 results")
 	assert.Contains(t, output, "📁 [facebook/react]")

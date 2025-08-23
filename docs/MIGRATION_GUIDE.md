@@ -11,7 +11,7 @@
 - **Dependencies**: Heavy Node.js ecosystem (yargs, conf, execa, etc.)
 - **Testing**: Basic integration tests with vitest
 - **Distribution**: npm package with global install
-- **Features**: GitHub code search with basic filtering
+- **Features**: GitHub search with basic filtering
 
 ### **Target State: gh-scout (Go)**
 - **Architecture**: Modular Go CLI with dependency injection
@@ -92,7 +92,7 @@ type SearchItem struct {
 // cmd/root.go
 var rootCmd = &cobra.Command{
     Use:   "gh-scout",
-    Short: "GitHub code search with intelligent filtering and analysis",
+    Short: "GitHub search with intelligent filtering and analysis",
     Long: `Search GitHub's vast codebase to find working examples and configurations.
 
 Perfect for discovering real-world usage patterns, configuration examples,

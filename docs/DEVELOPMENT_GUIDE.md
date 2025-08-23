@@ -1,12 +1,12 @@
 # gh-scout Development Guide
 
 **Project**: Convert ghx to gh-scout (GitHub CLI Extension)
-**Goal**: Professional-grade GitHub code search with configuration discovery workflows
+**Goal**: Professional-grade GitHub search with configuration discovery workflows
 **Target Quality**: Match gh-comment's 85% test coverage and production standards
 
 ## 🎯 **Project Overview**
 
-gh-scout transforms GitHub code search from a basic utility into a powerful configuration discovery and pattern analysis tool. It leverages gh-comment's proven architecture patterns while solving a different developer workflow problem.
+gh-scout transforms GitHub search from a basic utility into a powerful configuration discovery and pattern analysis tool. It leverages gh-comment's proven architecture patterns while solving a different developer workflow problem.
 
 ### **Core Value Proposition**
 - **Configuration Discovery**: Find working configs across millions of GitHub repos

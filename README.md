@@ -2,7 +2,7 @@
 
 Search GitHub code from the command line. Inspired by [ghx](https://github.com/johnlindquist/ghx).
 
-**GitHub CLI Extension** - Extends the `gh` command with intelligent code search capabilities. Learn more about [GitHub CLI extensions](https://cli.github.com/manual/gh_extension).
+**GitHub CLI Extension** - Extends the `gh` command with intelligent search capabilities. Learn more about [GitHub CLI extensions](https://cli.github.com/manual/gh_extension).
 
 ## Installation
 
@@ -90,7 +90,7 @@ gh scout "dockerfile" --min-stars 1000 --repo "**/production"
 gh scout "github/workflows" --filename "*.yml" --path ".github/workflows"
 ```
 
-### Organization-Wide Code Search
+### Organization-Wide Search
 
 Perfect for exploring patterns across all repositories in an organization:
 
@@ -133,7 +133,7 @@ gh scout "test" --filename "*test*" --language go --min-stars 1000
 
 ### Topic-Based Search Workflow
 
-Since GitHub's code search doesn't support topic filtering directly, use this two-step workflow:
+Since GitHub's search doesn't support topic filtering directly, use this two-step workflow:
 
 ```bash
 # 1. Find repositories by topic using built-in gh command

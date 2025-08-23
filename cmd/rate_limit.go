@@ -98,7 +98,7 @@ func runRateLimit(cmd *cobra.Command, args []string) error {
 	if verbose {
 		fmt.Println()
 		fmt.Println("🔧 **Technical Details**:")
-		fmt.Printf("  • API Endpoint: Search API (code search)\n")
+		fmt.Printf("  • API Endpoint: Search API\n")
 		fmt.Printf("  • Rate Limit Type: Per-user, per-hour\n")
 		fmt.Printf("  • Reset Time: %s\n", rateLimit.Reset.Format(time.RFC3339))
 		fmt.Printf("  • Current Time: %s\n", time.Now().Format(time.RFC3339))
