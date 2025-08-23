@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/silouanwright/gh-code-search/internal/config"
+	"github.com/silouanwright/gh-scout/internal/config"
 	"github.com/spf13/cobra"
 )
 

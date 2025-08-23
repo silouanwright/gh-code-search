@@ -1,4 +1,4 @@
-project_name: gh-code-search
+project_name: gh-scout
 
 before:
   hooks:
@@ -15,7 +15,7 @@ builds:
     goarch:
       - amd64
       - arm64
-    binary: gh-code-search
+    binary: gh-scout
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
 
@@ -50,7 +50,7 @@ changelog:
 release:
   github:
     owner: silouanwright
-    name: gh-code-search
+    name: gh-scout
   draft: false
   prerelease: auto
-  name_template: "gh-code-search {{.Version}}"
+  name_template: "gh-scout {{.Version}}"

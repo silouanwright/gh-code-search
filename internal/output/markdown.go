@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/silouanwright/gh-code-search/internal/github"
+	"github.com/silouanwright/gh-scout/internal/github"
 )
 
 // MarkdownFormatter formats search results as markdown

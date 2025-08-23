@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/silouanwright/gh-code-search/internal/github"
+	"github.com/silouanwright/gh-scout/internal/github"
 	"github.com/spf13/cobra"
 )
 

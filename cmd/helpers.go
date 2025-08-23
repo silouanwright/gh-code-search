@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/silouanwright/gh-code-search/internal/github"
+	"github.com/silouanwright/gh-scout/internal/github"
 )
 
 // handleSearchError provides intelligent error handling with actionable guidance

@@ -1,4 +1,4 @@
-module github.com/silouanwright/gh-code-search
+module github.com/silouanwright/gh-scout
 
 go 1.23.0
 

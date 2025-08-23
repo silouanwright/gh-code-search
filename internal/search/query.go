@@ -154,7 +154,7 @@ func (qb *QueryBuilder) WithRepositories(repos []string) *QueryBuilder {
 	return qb
 }
 
-// WithOwners adds owner/user filters
+// WithOwners adds owner/user/org filters (uses user: qualifier for both)
 func (qb *QueryBuilder) WithOwners(owners []string) *QueryBuilder {
 	if len(owners) > 0 {
 		qb.filters["user"] = owners

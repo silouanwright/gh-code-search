@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/silouanwright/gh-code-search/internal/search"
+	"github.com/silouanwright/gh-scout/internal/search"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

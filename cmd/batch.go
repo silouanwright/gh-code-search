@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/silouanwright/gh-code-search/internal/github"
-	"github.com/silouanwright/gh-code-search/internal/search"
+	"github.com/silouanwright/gh-scout/internal/github"
+	"github.com/silouanwright/gh-scout/internal/search"
 )
 
 var (

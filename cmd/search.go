@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/silouanwright/gh-code-search/internal/github"
-	"github.com/silouanwright/gh-code-search/internal/search"
+	"github.com/silouanwright/gh-scout/internal/github"
+	"github.com/silouanwright/gh-scout/internal/search"
 	"github.com/spf13/cobra"
 )
 
@@ -65,10 +65,12 @@ ranking based on repository quality indicators.`,
   gh code-search "config" --page 2 --limit 100        # Get next 100 results
   gh code-search "config" --page 3 --limit 50         # Get results 201-250
 
-  # Organization/owner-specific searches
-  gh code-search "eslint.config.js" --owner microsoft --language javascript
-  gh code-search "next.config.js" --owner vercel --page 1 --limit 50
-  gh code-search "interface" --owner google --owner facebook --language typescript
+  # Search by owner (works for both users and organizations)
+  gh code-search "eslint.config.js" --owner microsoft --language javascript    # Organization
+  gh code-search "func main" --owner torvalds --language c                     # Individual user
+  gh code-search "useState" --owner facebook --repo facebook/react             # Specific repo in org
+  gh code-search "const" --owner stitchfix --repo stitchfix/web-frontend       # Private org/repo
+  gh code-search "interface" --owner google --owner facebook --language typescript  # Multiple orgs
 
   # Topic-based workflow (find repos by topic, then search code)
   gh search repos --topic=react --stars=">1000" --json fullName | jq -r '.[].fullName' > react-repos.txt
@@ -490,7 +492,7 @@ func init() {
 	searchCmd.Flags().StringVarP(&searchFilename, "filename", "f", "", "exact filename match")
 	searchCmd.Flags().StringVarP(&searchExtension, "extension", "e", "", "file extension filter")
 	searchCmd.Flags().StringVarP(&searchPath, "path", "p", "", "file path filter")
-	searchCmd.Flags().StringSliceVarP(&searchOwner, "owner", "o", nil, "repository owner/organization filter")
+	searchCmd.Flags().StringSliceVarP(&searchOwner, "owner", "o", nil, "filter by repository owner (user or organization)")
 	searchCmd.Flags().StringVar(&searchSize, "size", "", "file size filter (e.g., '>1000', '<500')")
 
 	// Quality & ranking flags (enhanced from ghx)

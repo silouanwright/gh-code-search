@@ -76,7 +76,7 @@ jobs:
         go-version: '1.21'
 
     - name: Build binary
-      run: go build -v -o gh-code-search
+      run: go build -v -o gh-scout
 
     - name: Test binary
-      run: ./gh-code-search --help
+      run: ./gh-scout --help

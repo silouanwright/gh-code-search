@@ -1,12 +1,12 @@
-# gh-code-search Development Guide
+# gh-scout Development Guide
 
-**Project**: Convert ghx to gh-code-search (GitHub CLI Extension)
+**Project**: Convert ghx to gh-scout (GitHub CLI Extension)
 **Goal**: Professional-grade GitHub code search with configuration discovery workflows
 **Target Quality**: Match gh-comment's 85% test coverage and production standards
 
 ## 🎯 **Project Overview**
 
-gh-code-search transforms GitHub code search from a basic utility into a powerful configuration discovery and pattern analysis tool. It leverages gh-comment's proven architecture patterns while solving a different developer workflow problem.
+gh-scout transforms GitHub code search from a basic utility into a powerful configuration discovery and pattern analysis tool. It leverages gh-comment's proven architecture patterns while solving a different developer workflow problem.
 
 ### **Core Value Proposition**
 - **Configuration Discovery**: Find working configs across millions of GitHub repos
@@ -24,7 +24,7 @@ src/index.ts         # 400+ lines, all functionality
 test/index.test.ts   # Basic integration tests
 ```
 
-**Target gh-code-search Architecture (Go, following gh-comment patterns):**
+**Target gh-scout Architecture (Go, following gh-comment patterns):**
 ```
 main.go              # Entry point
 cmd/
@@ -187,20 +187,20 @@ type SavedSearch struct {
 
 ## 🚀 **Command Design**
 
-### **Root Command (gh code-search)**
+### **Root Command (gh scout)**
 ```bash
-gh code-search <query> [flags]                    # Main search interface
-gh code-search --saved <name>                     # Run saved search
-gh code-search --help                             # Comprehensive help
+gh scout <query> [flags]                    # Main search interface
+gh scout --saved <name>                     # Run saved search
+gh scout --help                             # Comprehensive help
 ```
 
 ### **Subcommands Following gh-comment Pattern**
 ```bash
-gh code-search patterns <query>                   # Analyze common patterns
-gh code-search save <name> <query> [flags]       # Save search for reuse
-gh code-search list                               # List saved searches
-gh code-search compare <file1> <file2>           # Compare configurations
-gh code-search template <query> --output <file>  # Generate template from patterns
+gh scout patterns <query>                   # Analyze common patterns
+gh scout save <name> <query> [flags]       # Save search for reuse
+gh scout list                               # List saved searches
+gh scout compare <file1> <file2>           # Compare configurations
+gh scout template <query> --output <file>  # Generate template from patterns
 ```
 
 ### **Global Flags (Consistent with gh-comment)**

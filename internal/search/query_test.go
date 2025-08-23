@@ -71,6 +71,33 @@ func TestQueryBuilder_Build(t *testing.T) {
 			expected: "config repo:repo1 repo:repo2 user:microsoft user:google",
 		},
 		{
+			name: "owner filter for individual user",
+			setupQB: func() *QueryBuilder {
+				qb := NewQueryBuilder([]string{"func"})
+				qb.WithOwners([]string{"torvalds"})
+				return qb
+			},
+			expected: "func user:torvalds",
+		},
+		{
+			name: "owner filter for organization",
+			setupQB: func() *QueryBuilder {
+				qb := NewQueryBuilder([]string{"const"})
+				qb.WithOwners([]string{"microsoft"})
+				return qb
+			},
+			expected: "const user:microsoft",
+		},
+		{
+			name: "owner filter with multiple users and orgs",
+			setupQB: func() *QueryBuilder {
+				qb := NewQueryBuilder([]string{"interface"})
+				qb.WithOwners([]string{"torvalds", "microsoft", "facebook"})
+				return qb
+			},
+			expected: "interface user:torvalds user:microsoft user:facebook",
+		},
+		{
 			name: "with size and path filters",
 			setupQB: func() *QueryBuilder {
 				qb := NewQueryBuilder([]string{"large file"})

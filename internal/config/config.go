@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/silouanwright/gh-code-search/internal/search"
+	"github.com/silouanwright/gh-scout/internal/search"
 	"gopkg.in/yaml.v3"
 )
 

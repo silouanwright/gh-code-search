@@ -1,7 +1,7 @@
 # CLAUDE.md - Development Context
 
 ## Project Overview
-gh-code-search is a professional GitHub CLI extension for code search and configuration discovery, migrating from the ghx TypeScript monolith to a production-grade Go implementation.
+gh-scout is a professional GitHub CLI extension for code search and configuration discovery, migrating from the ghx TypeScript monolith to a production-grade Go implementation.
 
 ## Key Reference Materials
 - **Gold Standard**: ~/repos/gh-comment - Use as the reference for architecture patterns, testing strategies, and CLI UX excellence
@@ -48,14 +48,14 @@ All critical architecture tasks complete. Codebase is production-ready with exce
 - ✅ **Examples**: 4 production-ready YAML configurations included
 
 **Key Features Delivered**:
-- `gh code-search batch config.yaml` - YAML-driven batch operations
-- `gh code-search "config" --repos repo1,repo2 --compare` - Multi-repo search
-- `gh code-search "config" --orgs org1,org2 --aggregate` - Organization-wide analysis
+- `gh scout batch config.yaml` - YAML-driven batch operations
+- `gh scout "config" --repos repo1,repo2 --compare` - Multi-repo search
+- `gh scout "config" --orgs org1,org2 --aggregate` - Organization-wide analysis
 - Full dry-run support, comprehensive error handling, professional UX
 
 ## NEXT PRIORITY 🚀
 
-With the batch operations system complete, gh-code-search is now positioned as the definitive tool for GitHub code search and configuration discovery. The next focus is performance optimization:
+With the batch operations system complete, gh-scout is now positioned as the definitive tool for GitHub code search and configuration discovery. The next focus is performance optimization:
 
 ### **PRIORITY: Enhanced Rate Limiting & Performance** ⚡
 **Objective**: Optimize API usage and add intelligent rate limiting
@@ -65,7 +65,7 @@ With the batch operations system complete, gh-code-search is now positioned as t
 - Better handling of GitHub API rate limits during large batch operations
 - **Estimated effort**: 3-4 hours
 
-**Current State**: gh-code-search is production-ready with excellent batch operations, making it the most powerful GitHub code search tool available.
+**Current State**: gh-scout is production-ready with excellent batch operations, making it the most powerful GitHub code search tool available.
 
 **Next Focus**: Optimize performance and API usage for large-scale batch operations.
 
@@ -82,15 +82,15 @@ grep -r "formatActionableError" ~/repos/gh-comment/   # Error handling
 # Current codebase analysis
 tree -I 'vendor|.git' -L 3                   # Project structure
 go test ./... -cover                          # Test coverage
-go build && ./gh-code-search --version            # Verify build
+go build && ./gh-scout --version            # Verify build
 ```
 
 ### **Testing & Verification Commands**
 ```bash
 # Verify current functionality
-./gh-code-search search "test" --format json | head -10
-./gh-code-search search "test" --format markdown | head -10
-./gh-code-search search "test" --format compact | head -3
+./gh-scout search "test" --format json | head -10
+./gh-scout search "test" --format markdown | head -10
+./gh-scout search "test" --format compact | head -3
 go test ./... -cover  # Check test coverage
 ```
 
@@ -112,8 +112,8 @@ find . -name "*.go" -exec wc -l {} + | sort -n | tail -10  # Find large files
 ### **Performance & Security Checks**
 ```bash
 # Rate limiting and API usage
-./gh-code-search search "test" --limit 100 --verbose  # Check API calls
-./gh-code-search rate-limit                           # Check remaining quota
+./gh-scout search "test" --limit 100 --verbose  # Check API calls
+./gh-scout rate-limit                           # Check remaining quota
 
 # Security validation
 grep -r "token\|secret\|key" --include="*.go" . | grep -v test  # Token handling
@@ -144,9 +144,9 @@ find . -name "*.go" -exec grep -l "os.Create\|WriteFile" {} \;  # File permissio
 
 **STATUS: COMPLETE AND PRODUCTION-READY** 🎉
 
-Following gh-comment's excellent batch functionality patterns, gh-code-search now features a **comprehensive batch operations system** that provides massive value for configuration discovery and comparative analysis workflows.
+Following gh-comment's excellent batch functionality patterns, gh-scout now features a **comprehensive batch operations system** that provides massive value for configuration discovery and comparative analysis workflows.
 
-### **Why Batch Operations Are Critical for gh-code-search**
+### **Why Batch Operations Are Critical for gh-scout**
 
 **Problems Solved** ✅:
 - ✅ Users can now run multiple searches automatically via YAML configs
@@ -157,21 +157,21 @@ Following gh-comment's excellent batch functionality patterns, gh-code-search no
 **Batch Operations Now Available**:
 ```bash
 # Tech stack comparative analysis
-gh code-search batch react-typescript-configs.yaml --format comparison
+gh scout batch react-typescript-configs.yaml --format comparison
 
 # Multi-organization configuration discovery
-gh code-search "vite.config" --repos microsoft/*,facebook/*,vercel/* --aggregate
+gh scout "vite.config" --repos microsoft/*,facebook/*,vercel/* --aggregate
 
 # Pattern analysis across ecosystems
-gh code-search "webpack OR vite" --repos facebook/*,vercel/* --compare
+gh scout "webpack OR vite" --repos facebook/*,vercel/* --compare
 
 # Pattern analysis across ecosystems
-gh code-search batch ecosystem-analysis.yaml --output analysis/ --compare
+gh scout batch ecosystem-analysis.yaml --output analysis/ --compare
 ```
 
 ### **IMPLEMENTATION FOUNDATION - ALREADY EXCELLENT** ✅
 
-**gh-code-search's Existing Architecture is Perfect for Batch Operations**:
+**gh-scout's Existing Architecture is Perfect for Batch Operations**:
 - ✅ **Interface-based design** with dependency injection (easy batch client management)
 - ✅ **Comprehensive configuration system** (`internal/config/config.go`)
 - ✅ **Multiple output formats** (JSON, Markdown, Compact)
@@ -249,13 +249,13 @@ searches:
 **Command Structure**:
 ```bash
 # Multi-repo search with aggregation
-gh code-search "docker-compose.yml" --repos microsoft/vscode,facebook/react,vercel/next.js --aggregate
+gh scout "docker-compose.yml" --repos microsoft/vscode,facebook/react,vercel/next.js --aggregate
 
 # Organization-wide configuration discovery
-gh code-search "tsconfig.json" --orgs microsoft,google,facebook --min-stars 500 --compare
+gh scout "tsconfig.json" --orgs microsoft,google,facebook --min-stars 500 --compare
 
 # Ecosystem analysis
-gh code-search batch ecosystem-configs.yaml --format comparison --output results/
+gh scout batch ecosystem-configs.yaml --format comparison --output results/
 ```
 
 **Implementation in `cmd/search.go`**:
@@ -289,7 +289,7 @@ func executeBatchSearch(ctx context.Context, query string, repos []string) (*Bat
 
 **Comparison Output Format**:
 ```markdown
-# Configuration Analysis: Vite vs Webpack (Generated by gh-code-search batch)
+# Configuration Analysis: Vite vs Webpack (Generated by gh-scout batch)
 
 ## Summary
 - **Vite Configs Found**: 150 across 45 repositories
@@ -319,7 +319,7 @@ Based on analysis of 350 configurations:
 
 ### **KEY ARCHITECTURAL ADVANTAGES** 🏆
 
-**gh-code-search's Existing Foundation Provides**:
+**gh-scout's Existing Foundation Provides**:
 1. **Zero Breaking Changes**: Batch operations extend existing architecture
 2. **Reuse Everything**: Existing search logic, output formats, error handling
 3. **Dependency Injection**: Easy to test batch operations with mock clients
@@ -351,16 +351,16 @@ Based on analysis of 350 configurations:
 **Configuration Discovery Workflow**:
 ```bash
 # 1. Analyze React ecosystem configurations
-gh code-search batch react-ecosystem.yaml --output analysis/
+gh scout batch react-ecosystem.yaml --output analysis/
 
 # 2. Compare Next.js vs Remix patterns
-gh code-search "app router" --repos vercel/next.js,remix-run/remix --compare
+gh scout "app router" --repos vercel/next.js,remix-run/remix --compare
 
 # 3. Generate configuration templates
-gh code-search batch docker-patterns.yaml --extract-templates
+gh scout batch docker-patterns.yaml --extract-templates
 
 # 4. Organization-wide audit
-gh code-search "security config" --orgs myorg --min-stars 10 --aggregate
+gh scout "security config" --orgs myorg --min-stars 10 --aggregate
 ```
 
 **Expected User Value**:
@@ -372,7 +372,7 @@ gh code-search "security config" --orgs myorg --min-stars 10 --aggregate
 
 ### **COMPETITIVE ADVANTAGE ACHIEVED** 🚀
 
-gh-code-search is now the **only CLI tool** that provides:
+gh-scout is now the **only CLI tool** that provides:
 - ✅ Batch configuration discovery across repositories
 - ✅ Systematic pattern analysis and comparison
 - ✅ YAML-driven batch search workflows
@@ -384,4 +384,4 @@ Following gh-comment's proven batch patterns has delivered:
 - ✅ **Maintainable**: Clean architecture with comprehensive tests
 - ✅ **Extensible**: Solid foundation for advanced features
 
-**gh-code-search is now positioned as the definitive tool for configuration discovery and analysis in the GitHub ecosystem.**
+**gh-scout is now positioned as the definitive tool for configuration discovery and analysis in the GitHub ecosystem.**
