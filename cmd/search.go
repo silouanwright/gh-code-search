@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/silouanwright/gh-scout/internal/github"
@@ -17,6 +18,8 @@ import (
 var (
 	// Global client for dependency injection (following gh-comment pattern)
 	searchClient github.GitHubAPI
+	// Mutex to protect concurrent client initialization
+	searchClientMutex sync.Mutex
 	// Rate limiter for search operations
 	searchRateLimiter *github.RateLimiter
 
@@ -111,13 +114,19 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("page number too large (max: %d)", maxPage)
 	}
 
-	// Initialize client if not set (for testing)
+	// Initialize client if not set (thread-safe)
 	if searchClient == nil {
-		client, err := createGitHubClient()
-		if err != nil {
-			return handleClientError(err)
+		searchClientMutex.Lock()
+		// Double-check after acquiring lock
+		if searchClient == nil {
+			client, err := createGitHubClient()
+			if err != nil {
+				searchClientMutex.Unlock()
+				return handleClientError(err)
+			}
+			searchClient = client
 		}
-		searchClient = client
+		searchClientMutex.Unlock()
 	}
 
 	// Check if batch flags are used (Phase 2 functionality)

@@ -226,11 +226,13 @@ func (qb *QueryBuilder) GetFilters() SearchFilters {
 
 	// Parse stars constraint
 	if starsConstraint, exists := qb.constraints["stars"]; exists {
-		// Simple parsing for >=n format
+		// Parse star constraint with proper error handling
 		if strings.HasPrefix(starsConstraint, ">=") {
 			var stars int
-			_, _ = fmt.Sscanf(starsConstraint, ">=%d", &stars)
-			filters.MinStars = stars
+			if _, err := fmt.Sscanf(starsConstraint, ">=%d", &stars); err == nil && stars > 0 {
+				filters.MinStars = stars
+			}
+			// If parsing fails or stars <= 0, MinStars remains 0 (no filter)
 		}
 	}
 

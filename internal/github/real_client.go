@@ -13,12 +13,14 @@ import (
 	"github.com/cli/go-gh/v2/pkg/api"
 )
 
-// RealClient implements GitHubAPI using go-gh (GitHub CLI's library)
+// RealClient implements GitHubAPI using go-gh (GitHub CLI's library).
+// It provides a production implementation that communicates with GitHub's API.
 type RealClient struct {
 	client *api.RESTClient
 }
 
-// NewRealClient creates a new GitHub API client using go-gh
+// NewRealClient creates a new GitHub API client using go-gh.
+// It automatically handles authentication via gh auth token or GH_TOKEN env var
 func NewRealClient() (*RealClient, error) {
 	// go-gh automatically handles:
 	// - Authentication (gh auth token, GH_TOKEN env var)
@@ -42,7 +44,8 @@ func NewRealClient() (*RealClient, error) {
 	}, nil
 }
 
-// SearchCode implements GitHubAPI.SearchCode
+// SearchCode implements GitHubAPI.SearchCode.
+// It searches GitHub code with the provided query and returns matching results
 func (c *RealClient) SearchCode(ctx context.Context, query string, opts *SearchOptions) (*SearchResults, error) {
 	// Build URL with query parameters
 	params := url.Values{}
@@ -88,7 +91,8 @@ func (c *RealClient) SearchCode(ctx context.Context, query string, opts *SearchO
 	return searchResults, nil
 }
 
-// GetFileContent implements GitHubAPI.GetFileContent
+// GetFileContent implements GitHubAPI.GetFileContent.
+// It retrieves the content of a file from a GitHub repository
 func (c *RealClient) GetFileContent(ctx context.Context, owner, repo, path, ref string) ([]byte, error) {
 	endpoint := fmt.Sprintf("repos/%s/%s/contents/%s", owner, repo, path)
 
@@ -118,7 +122,8 @@ func (c *RealClient) GetFileContent(ctx context.Context, owner, repo, path, ref 
 	return []byte(fileContent.Content), nil
 }
 
-// GetRateLimit implements GitHubAPI.GetRateLimit
+// GetRateLimit implements GitHubAPI.GetRateLimit.
+// It returns the current API rate limit status for search operations
 func (c *RealClient) GetRateLimit(ctx context.Context) (*RateLimit, error) {
 	var rateLimits struct {
 		Resources struct {

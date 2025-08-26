@@ -23,6 +23,22 @@ type MarkdownFormatter struct {
 	ColorMode       string
 }
 
+// sanitizeMarkdown escapes special markdown characters to prevent injection
+func sanitizeMarkdown(s string) string {
+	if s == "" {
+		return s
+	}
+	// Escape only the most critical markdown characters for safety
+	// We still want to preserve some formatting for readability
+	replacer := strings.NewReplacer(
+		"<", "&lt;",
+		">", "&gt;",
+		"&", "&amp;",
+		"\"", "&quot;",
+	)
+	return replacer.Replace(s)
+}
+
 // NewMarkdownFormatter creates a new markdown formatter with default settings
 func NewMarkdownFormatter() *MarkdownFormatter {
 	return &MarkdownFormatter{
@@ -110,7 +126,7 @@ func (f *MarkdownFormatter) formatSearchItem(buf *strings.Builder, item *github.
 
 // formatRepositoryHeader formats the repository header section
 func (f *MarkdownFormatter) formatRepositoryHeader(buf *strings.Builder, item *github.SearchItem, index int) {
-	repoName := getStringValue(item.Repository.FullName)
+	repoName := sanitizeMarkdown(getStringValue(item.Repository.FullName))
 	repoURL := getStringValue(item.Repository.HTMLURL)
 
 	if repoName == "" {
@@ -137,7 +153,7 @@ func (f *MarkdownFormatter) formatRepositoryHeader(buf *strings.Builder, item *g
 
 	// Repository description
 	if desc := getStringValue(item.Repository.Description); desc != "" {
-		buf.WriteString(fmt.Sprintf("*%s*\n\n", desc))
+		buf.WriteString(fmt.Sprintf("*%s*\n\n", sanitizeMarkdown(desc)))
 	}
 }
 
