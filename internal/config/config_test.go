@@ -272,12 +272,12 @@ func TestConfigPathResolution(t *testing.T) {
 	assert.NotEmpty(t, paths)
 
 	// Should check current directory first
-	assert.Contains(t, paths, ".gh-code-search.yaml")
-	assert.Contains(t, paths, ".gh-code-search.yml")
+	assert.Contains(t, paths, ".gh-scout.yaml")
+	assert.Contains(t, paths, ".gh-scout.yml")
 
 	// Should include user config directory
 	configDir := getConfigDir()
-	expectedPath := filepath.Join(configDir, "gh-code-search.yaml")
+	expectedPath := filepath.Join(configDir, "gh-scout.yaml")
 	assert.Contains(t, paths, expectedPath)
 }
 
@@ -301,7 +301,7 @@ func TestGetConfigDir(t *testing.T) {
 	os.Setenv("XDG_CONFIG_HOME", xdgHome)
 
 	configDir = getConfigDir()
-	assert.Equal(t, filepath.Join(xdgHome, "gh-code-search"), configDir)
+	assert.Equal(t, filepath.Join(xdgHome, "gh-scout"), configDir)
 
 	// Clean up environment
 	os.Setenv("XDG_CONFIG_HOME", originalXDG)

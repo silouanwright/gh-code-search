@@ -56,40 +56,40 @@ and best practices across millions of repositories.
 Results include code context, repository information, and intelligent
 ranking based on repository quality indicators.`,
 	Example: `  # Configuration discovery workflows
-  gh code-search "tsconfig.json" --language json --limit 10
-  gh code-search "vite.config" --language javascript --context 30
-  gh code-search "dockerfile" --filename dockerfile --repo "**/react"
+  gh scout "tsconfig.json" --language json --limit 10
+  gh scout "vite.config" --language javascript --context 30
+  gh scout "dockerfile" --filename dockerfile --repo "**/react"
 
   # Page-based search (API efficient for large datasets)
-  gh code-search "config" --page 1 --limit 100        # Get first 100 results
-  gh code-search "config" --page 2 --limit 100        # Get next 100 results
-  gh code-search "config" --page 3 --limit 50         # Get results 201-250
+  gh scout "config" --page 1 --limit 100        # Get first 100 results
+  gh scout "config" --page 2 --limit 100        # Get next 100 results
+  gh scout "config" --page 3 --limit 50         # Get results 201-250
 
   # Search by owner (works for both users and organizations)
-  gh code-search "eslint.config.js" --owner microsoft --language javascript    # Organization
-  gh code-search "func main" --owner torvalds --language c                     # Individual user
-  gh code-search "useState" --owner facebook --repo facebook/react             # Specific repo in org
-  gh code-search "const" --owner stitchfix --repo stitchfix/web-frontend       # Private org/repo
-  gh code-search "interface" --owner google --owner facebook --language typescript  # Multiple orgs
+  gh scout "eslint.config.js" --owner microsoft --language javascript    # Organization
+  gh scout "func main" --owner torvalds --language c                     # Individual user
+  gh scout "useState" --owner facebook --repo facebook/react             # Specific repo in org
+  gh scout "const" --owner stitchfix --repo stitchfix/web-frontend       # Private org/repo
+  gh scout "interface" --owner google --owner facebook --language typescript  # Multiple orgs
 
   # Topic-based workflow (find repos by topic, then search code)
   gh search repos --topic=react --stars=">1000" --json fullName | jq -r '.[].fullName' > react-repos.txt
-  gh code-search "useState" --repos $(cat react-repos.txt | tr '\n' ',')
+  gh scout "useState" --repos $(cat react-repos.txt | tr '\n' ',')
 
   # Multi-repository batch searches (Phase 2)
-  gh code-search "docker-compose.yml" --repos microsoft/vscode,facebook/react,vercel/next.js --aggregate
-  gh code-search "tsconfig.json" --orgs microsoft,google,facebook --min-stars 500 --compare
-  gh code-search "webpack OR vite" --repos facebook/*,vercel/* --compare
+  gh scout "docker-compose.yml" --repos microsoft/vscode,facebook/react,vercel/next.js --aggregate
+  gh scout "tsconfig.json" --orgs microsoft,google,facebook --min-stars 500 --compare
+  gh scout "webpack OR vite" --repos facebook/*,vercel/* --compare
 
   # Auto-pagination (less API efficient but convenient)
-  gh code-search "hooks" --limit 200                  # Automatically fetches 2 pages
+  gh scout "hooks" --limit 200                  # Automatically fetches 2 pages
 
   # Export results to files
-  gh code-search "config" --language json --output configs.md     # Markdown export
-  gh code-search "hooks" --pipe --output data.txt                 # Pipe format export
+  gh scout "config" --language json --output configs.md     # Markdown export
+  gh scout "hooks" --pipe --output data.txt                 # Pipe format export
 
   # Pipe results for further processing
-  gh code-search "react hooks" --language typescript --pipe`,
+  gh scout "react hooks" --language typescript --pipe`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runSearch,
 }

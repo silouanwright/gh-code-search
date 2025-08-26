@@ -17,8 +17,8 @@ const (
   • Authenticate with GitHub CLI for higher limits
 
 💡 **Examples**:
-  gh code-search "config" --repo facebook/react --language json
-  gh code-search "tsconfig" --filename tsconfig.json --limit 10
+  gh scout "config" --repo facebook/react --language json
+  gh scout "tsconfig" --filename tsconfig.json --limit 10
 
 🔗 **More Info**: https://docs.github.com/en/rest/search#rate-limit`
 
@@ -29,7 +29,7 @@ const (
   4. Retry your search
 
 💡 **Examples**:
-  gh code-search "specific term" --repo known/repo --language go
+  gh scout "specific term" --repo known/repo --language go
 
 🔗 **GitHub CLI Setup**: https://docs.github.com/en/github-cli/github-cli/quickstart`
 
@@ -40,9 +40,9 @@ const (
   • Filters: language:go filename:main.go
 
 💡 **Fixed Examples**:
-  gh code-search "tsconfig.json" --language json
-  gh code-search "useEffect" --language typescript --extension tsx
-  gh code-search "dockerfile" --filename dockerfile --repo facebook/react
+  gh scout "tsconfig.json" --language json
+  gh scout "useEffect" --language typescript --extension tsx
+  gh scout "dockerfile" --filename dockerfile --repo facebook/react
 
 🔗 **Search Syntax Guide**: https://docs.github.com/en/search-github/searching-on-github/searching-code`
 
@@ -53,9 +53,9 @@ const (
   • Try related terms: "setup", "options", "settings"
 
 💡 **Examples**:
-  gh code-search "config" --language javascript --min-stars 100
-  gh code-search "package.json" --path examples/ --limit 10
-  gh code-search "typescript" --filename tsconfig.json
+  gh scout "config" --language javascript --min-stars 100
+  gh scout "package.json" --path examples/ --limit 10
+  gh scout "typescript" --filename tsconfig.json
 
 💡 **Pro Tip**: Start broad, then add filters to narrow down results`
 
@@ -66,7 +66,7 @@ const (
   • Use --verbose for detailed network logs
 
 💡 **Quick Test**:
-  gh code-search "simple query" --limit 5 --verbose
+  gh scout "simple query" --limit 5 --verbose
 
 🔗 **GitHub Status**: https://www.githubstatus.com`
 
@@ -74,7 +74,7 @@ const (
   1. Install GitHub CLI: https://cli.github.com
   2. Authenticate: gh auth login --web
   3. Verify access: gh auth status
-  4. Retry: gh code-search "test query"
+  4. Retry: gh scout "test query"
 
 💡 **Alternative**: Set GITHUB_TOKEN environment variable
 
@@ -82,12 +82,12 @@ const (
 
 	// Search suggestions by query type
 	SuggestionConfigQueries = `💡 **Config File Patterns**:
-  gh code-search "config" --filename package.json
-  gh code-search "tsconfig" --language json`
+  gh scout "config" --filename package.json
+  gh scout "tsconfig" --language json`
 
 	SuggestionReactQueries = `💡 **React Development**:
-  gh code-search "react" --language typescript --extension tsx
-  gh code-search "useState" --repo facebook/react`
+  gh scout "react" --language typescript --extension tsx
+  gh scout "useState" --repo facebook/react`
 
 	// Common query patterns
 	QueryPatternConfig = "config"

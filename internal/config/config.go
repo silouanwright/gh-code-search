@@ -103,7 +103,7 @@ func (c *Config) Save() error {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
-	configPath := filepath.Join(configDir, "gh-code-search.yaml")
+	configPath := filepath.Join(configDir, "gh-scout.yaml")
 	return c.SaveToFile(configPath)
 }
 
@@ -255,16 +255,16 @@ func getConfigPaths() []string {
 	homeDir, _ := os.UserHomeDir()
 
 	paths := []string{
-		".gh-code-search.yaml",                                    // Current directory
-		".gh-code-search.yml",                                     // Current directory (alternative)
-		filepath.Join(configDir, "gh-code-search.yaml"),          // User config directory
-		filepath.Join(configDir, "gh-code-search.yml"),           // User config directory (alternative)
+		".gh-scout.yaml",                                    // Current directory
+		".gh-scout.yml",                                     // Current directory (alternative)
+		filepath.Join(configDir, "gh-scout.yaml"),          // User config directory
+		filepath.Join(configDir, "gh-scout.yml"),           // User config directory (alternative)
 	}
 
 	if homeDir != "" {
 		paths = append(paths,
-			filepath.Join(homeDir, ".gh-code-search.yaml"),        // Home directory
-			filepath.Join(homeDir, ".gh-code-search.yml"),         // Home directory (alternative)
+			filepath.Join(homeDir, ".gh-scout.yaml"),        // Home directory
+			filepath.Join(homeDir, ".gh-scout.yml"),         // Home directory (alternative)
 		)
 	}
 
@@ -278,11 +278,11 @@ func getConfigDir() string {
 	}
 
 	if configHome := os.Getenv("XDG_CONFIG_HOME"); configHome != "" {
-		return filepath.Join(configHome, "gh-code-search")
+		return filepath.Join(configHome, "gh-scout")
 	}
 
 	if homeDir, err := os.UserHomeDir(); err == nil {
-		return filepath.Join(homeDir, ".config", "gh-code-search")
+		return filepath.Join(homeDir, ".config", "gh-scout")
 	}
 
 	return "."

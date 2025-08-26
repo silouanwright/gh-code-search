@@ -96,16 +96,16 @@ var batchCmd = &cobra.Command{
 	`),
 	Example: heredoc.Doc(`
 		# Execute batch search from config
-		$ gh code-search batch tech-stack-analysis.yaml
+		$ gh scout batch tech-stack-analysis.yaml
 
 		# Validate config without executing
-		$ gh code-search batch config.yaml --dry-run
+		$ gh scout batch config.yaml --dry-run
 
 		# Use verbose output to see progress
-		$ gh code-search batch config.yaml --verbose
+		$ gh scout batch config.yaml --verbose
 
 		# Override output format
-		$ gh code-search batch config.yaml --format json
+		$ gh scout batch config.yaml --format json
 	`),
 	Args: cobra.ExactArgs(1),
 	RunE: runBatch,

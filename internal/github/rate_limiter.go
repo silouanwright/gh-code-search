@@ -216,7 +216,7 @@ func (rl *RateLimiter) formatFinalError(operation string, err error) error {
 
 	switch {
 	case rl.isRateLimitError(err):
-		return fmt.Errorf("rate limit exceeded during %s after %d retries: %w\n\n💡 Suggestions:\n  • Wait until your rate limit resets (check: gh code-search rate-limit)\n  • Use authenticated requests (verify: gh auth status)\n  • Consider reducing batch operation frequency\n  • Add delays between operations", operation, rl.maxRetries, err)
+		return fmt.Errorf("rate limit exceeded during %s after %d retries: %w\n\n💡 Suggestions:\n  • Wait until your rate limit resets (check: gh scout rate-limit)\n  • Use authenticated requests (verify: gh auth status)\n  • Consider reducing batch operation frequency\n  • Add delays between operations", operation, rl.maxRetries, err)
 
 	case rl.isAbuseRateLimitError(err):
 		return fmt.Errorf("GitHub abuse detection triggered during %s after %d retries: %w\n\n💡 Suggestions:\n  • You're making requests too rapidly\n  • Wait at least 1 minute before retrying\n  • Implement longer delays between batch operations\n  • Reduce concurrent operations", operation, rl.maxRetries, err)

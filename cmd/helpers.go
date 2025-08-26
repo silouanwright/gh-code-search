@@ -26,7 +26,7 @@ func handleSearchError(err error, query string) error {
   • Wait %s for automatic reset
   • Use more specific search terms: --language, --repo, --filename
   • Search specific repositories: --repo owner/repo
-  • Use saved searches: gh code-search saved list
+  • Use saved searches: gh scout saved list
 
 📊 **Rate Limit Status**:
   • Limit: %d searches per hour
@@ -34,9 +34,9 @@ func handleSearchError(err error, query string) error {
   • Reset: %s
 
 🔧 **Try These Alternatives**:
-  gh code-search "config" --repo facebook/react --language json
-  gh code-search "tsconfig" --filename tsconfig.json --limit 10
-  gh code-search --saved popular-configs`, err, resetTime, rateLimitErr.Limit, rateLimitErr.Remaining, resetTime)
+  gh scout "config" --repo facebook/react --language json
+  gh scout "tsconfig" --filename tsconfig.json --limit 10
+  gh scout --saved popular-configs`, err, resetTime, rateLimitErr.Limit, rateLimitErr.Remaining, resetTime)
 	}
 
 	// Abuse rate limiting
@@ -57,8 +57,8 @@ func handleSearchError(err error, query string) error {
   • Use more specific queries to reduce load
 
 🔧 **Optimize Your Searches**:
-  gh code-search "specific term" --repo known/repo --language go
-  gh code-search --filename package.json --path examples/`, err, retryAfter)
+  gh scout "specific term" --repo known/repo --language go
+  gh scout --filename package.json --path examples/`, err, retryAfter)
 	}
 
 	// Authentication errors
@@ -76,7 +76,7 @@ func handleSearchError(err error, query string) error {
   • Detailed repository metadata
 
 🚀 **After Authentication**:
-  gh code-search "your query here"`, err)
+  gh scout "your query here"`, err)
 	}
 
 	// Authorization/Permission errors
@@ -95,8 +95,8 @@ func handleSearchError(err error, query string) error {
   • Contact repository owner for access
 
 🔍 **Alternative Searches**:
-  gh code-search "similar terms" --repo public/repo
-  gh code-search "pattern" --language javascript --min-stars 100`, err)
+  gh scout "similar terms" --repo public/repo
+  gh scout "pattern" --language javascript --min-stars 100`, err)
 	}
 
 	// Resource not found
@@ -115,7 +115,7 @@ func handleSearchError(err error, query string) error {
   • Search similar repositories: --repo facebook/* --repo vercel/*
 
 🔍 **Broader Search**:
-  gh code-search "your terms" --language typescript --min-stars 50`, err)
+  gh scout "your terms" --language typescript --min-stars 50`, err)
 	}
 
 	// Query validation errors
@@ -134,14 +134,14 @@ func handleSearchError(err error, query string) error {
   • Language filters: language:go
 
 📖 **Corrected Examples**:
-  gh code-search "tsconfig.json" --language json
-  gh code-search "useEffect" --language typescript --extension tsx
-  gh code-search "dockerfile" --filename dockerfile --repo facebook/react
+  gh scout "tsconfig.json" --language json
+  gh scout "useEffect" --language typescript --extension tsx
+  gh scout "dockerfile" --filename dockerfile --repo facebook/react
 
 🚀 **Quick Fixes**:
-  gh code-search "simplified terms" --language typescript
-  gh code-search config --filename tsconfig.json
-  gh code-search pattern --repo owner/repo --language go`, err, query, formatValidationErrors(validationErr.Errors))
+  gh scout "simplified terms" --language typescript
+  gh scout config --filename tsconfig.json
+  gh scout pattern --repo owner/repo --language go`, err, query, formatValidationErrors(validationErr.Errors))
 	}
 
 	// No results found
@@ -156,13 +156,13 @@ func handleSearchError(err error, query string) error {
   • Try related terms: "setup", "options", "settings"
 
 🔍 **Alternative Searches**:
-  gh code-search "config" --language javascript --min-stars 100
-  gh code-search "package.json" --path examples/ --limit 10
-  gh code-search "typescript" --filename tsconfig.json
+  gh scout "config" --language javascript --min-stars 100
+  gh scout "package.json" --path examples/ --limit 10
+  gh scout "typescript" --filename tsconfig.json
 
 📖 **Browse Common Patterns**:
-  gh code-search patterns --help    # See pattern analysis features
-  gh code-search saved list         # Browse saved searches`, query)
+  gh scout patterns --help    # See pattern analysis features
+  gh scout saved list         # Browse saved searches`, query)
 	}
 
 	// Network/connectivity issues
@@ -182,8 +182,8 @@ func handleSearchError(err error, query string) error {
   • Wait a few minutes and retry
 
 🚀 **Retry Commands**:
-  gh code-search "simple query" --limit 5 --verbose
-  gh code-search --rate-limit  # Check API status`, err)
+  gh scout "simple query" --limit 5 --verbose
+  gh scout --rate-limit  # Check API status`, err)
 	}
 
 	// Client creation errors
@@ -204,7 +204,7 @@ func handleSearchError(err error, query string) error {
   1. Install gh CLI: brew install gh (macOS) or see docs
   2. Login: gh auth login --web
   3. Test: gh auth status
-  4. Retry: gh code-search "test query"`, err)
+  4. Retry: gh scout "test query"`, err)
 	}
 
 	// Generic fallback with helpful context
@@ -218,14 +218,14 @@ func handleSearchError(err error, query string) error {
   • Reduce result limit: --limit 10
 
 📖 **Get Help**:
-  gh code-search --help           # Command documentation
-  gh code-search patterns --help  # Pattern analysis features
-  gh code-search saved --help     # Saved searches management
+  gh scout --help           # Command documentation
+  gh scout patterns --help  # Pattern analysis features
+  gh scout saved --help     # Saved searches management
 
 🚀 **Common Solutions**:
-  gh code-search "simple terms" --language go --limit 5
-  gh code-search config --filename package.json
-  gh code-search pattern --repo popular/repo`, err)
+  gh scout "simple terms" --language go --limit 5
+  gh scout config --filename package.json
+  gh scout pattern --repo popular/repo`, err)
 }
 
 // handleClientError provides guidance for GitHub client creation failures
@@ -233,7 +233,7 @@ func handleClientError(err error) error {
 	return fmt.Errorf(`Failed to create GitHub API client: %w
 
 💡 **Authentication Required**:
-  GitHub CLI must be installed and authenticated for gh-code-search to work.
+  GitHub CLI must be installed and authenticated for gh-scout to work.
 
 🔧 **Setup Steps**:
   1. Install GitHub CLI: https://cli.github.com/
@@ -248,7 +248,7 @@ func handleClientError(err error) error {
      gh auth status
 
   4. Test the connection:
-     gh code-search "test query" --limit 1
+     gh scout "test query" --limit 1
 
 📈 **Why Authentication?**:
   • Higher rate limits (5,000 vs 60 requests/hour)
@@ -256,7 +256,7 @@ func handleClientError(err error) error {
   • Better error handling and diagnostics
 
 🚀 **After Setup**:
-  gh code-search "your search terms here"`, err)
+  gh scout "your search terms here"`, err)
 }
 
 // Helper functions for formatting

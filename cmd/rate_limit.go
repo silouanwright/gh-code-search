@@ -18,10 +18,10 @@ var rateLimitCmd = &cobra.Command{
 Shows remaining requests, limit, and reset time for the GitHub Search API.
 Useful for understanding when you can make more requests after hitting limits.`,
 	Example: `  # Check current rate limit status
-  gh code-search rate-limit
+  gh scout rate-limit
 
   # Check rate limits after hitting a limit
-  gh code-search rate-limit --verbose`,
+  gh scout rate-limit --verbose`,
 	RunE: runRateLimit,
 }
 
@@ -76,7 +76,7 @@ func runRateLimit(cmd *cobra.Command, args []string) error {
 		fmt.Println()
 		fmt.Println("💡 **While You Wait**:")
 		fmt.Println("  • Use more specific filters: --language, --repo, --filename")
-		fmt.Println("  • Try saved searches: gh code-search saved list")
+		fmt.Println("  • Try saved searches: gh scout saved list")
 		fmt.Println("  • Plan your searches to be more targeted")
 	} else if rateLimit.Remaining < 5 {
 		fmt.Println("⚠️  **Low on Requests**")

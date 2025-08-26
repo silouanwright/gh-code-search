@@ -12,22 +12,22 @@ import (
 // configCmd represents the config command
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Manage gh-code-search configuration",
-	Long: `Manage gh-code-search configuration settings.
+	Short: "Manage gh-scout configuration",
+	Long: `Manage gh-scout configuration settings.
 
 View, modify, and reset configuration values to customize
-gh-code-search behavior and preferences.`,
+gh-scout behavior and preferences.`,
 	Example: `  # View current configuration
-  gh code-search config show
+  gh scout config show
 
   # Reset editor preference
-  gh code-search config reset defaults.editor
+  gh scout config reset defaults.editor
 
   # Reset all configuration to defaults
-  gh code-search config reset --all
+  gh scout config reset --all
 
   # Set default language
-  gh code-search config set defaults.language typescript`,
+  gh scout config set defaults.language typescript`,
 }
 
 // configShowCmd shows current configuration
@@ -50,13 +50,13 @@ var configResetCmd = &cobra.Command{
 Use --all flag to reset all configuration, or specify a specific key
 to reset only that value.`,
 	Example: `  # Reset editor preference (fixes ghx issue #4)
-  gh code-search config reset defaults.editor
+  gh scout config reset defaults.editor
 
   # Reset output format
-  gh code-search config reset defaults.output_format
+  gh scout config reset defaults.output_format
 
   # Reset everything
-  gh code-search config reset --all`,
+  gh scout config reset --all`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runConfigReset,
 }
@@ -70,13 +70,13 @@ var configSetCmd = &cobra.Command{
 Supported configuration keys include defaults.editor, defaults.language,
 defaults.max_results, and more.`,
 	Example: `  # Set default editor (addresses ghx issue #4)
-  gh code-search config set defaults.editor "code"
+  gh scout config set defaults.editor "code"
 
   # Set default language
-  gh code-search config set defaults.language "typescript"
+  gh scout config set defaults.language "typescript"
 
   # Set default result limit
-  gh code-search config set defaults.max_results 25`,
+  gh scout config set defaults.max_results 25`,
 	Args: cobra.ExactArgs(2),
 	RunE: runConfigSet,
 }
@@ -91,7 +91,7 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	fmt.Println("🔧 Current gh-code-search configuration:")
+	fmt.Println("🔧 Current gh-scout configuration:")
 	fmt.Println()
 
 	// Show defaults
@@ -138,17 +138,17 @@ func runConfigReset(cmd *cobra.Command, args []string) error {
 	if resetAll {
 		// Reset entire configuration by removing existing config files
 		configPaths := []string{
-			".gh-code-search.yaml",
-			".gh-code-search.yml",
+			".gh-scout.yaml",
+			".gh-scout.yml",
 		}
 
 		// Also check user config directory
 		if homeDir, err := os.UserHomeDir(); err == nil {
 			configPaths = append(configPaths,
-				homeDir+"/.config/gh-code-search/gh-code-search.yaml",
-				homeDir+"/.config/gh-code-search/gh-code-search.yml",
-				homeDir+"/.gh-code-search.yaml",
-				homeDir+"/.gh-code-search.yml",
+				homeDir+"/.config/gh-scout/gh-scout.yaml",
+				homeDir+"/.config/gh-scout/gh-scout.yml",
+				homeDir+"/.gh-scout.yaml",
+				homeDir+"/.gh-scout.yml",
 			)
 		}
 
