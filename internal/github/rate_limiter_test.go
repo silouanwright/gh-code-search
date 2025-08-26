@@ -247,11 +247,11 @@ func TestAnalyzeErrorAndGetDelay(t *testing.T) {
 	rl := NewRateLimiter()
 
 	tests := []struct {
-		name          string
-		err           error
-		attempt       int
-		expectRetry   bool
-		expectDelay   bool
+		name        string
+		err         error
+		attempt     int
+		expectRetry bool
+		expectDelay bool
 	}{
 		{
 			name:        "rate limit error",
@@ -383,31 +383,31 @@ func TestIntelligentDelay(t *testing.T) {
 // TestEstimateComplexity tests operation complexity estimation
 func TestEstimateComplexity(t *testing.T) {
 	tests := []struct {
-		name            string
-		query           string
-		maxResults      int
-		hasFilters      bool
+		name               string
+		query              string
+		maxResults         int
+		hasFilters         bool
 		expectedComplexity OperationComplexity
 	}{
 		{
-			name:            "simple query",
-			query:           "config",
-			maxResults:      10,
-			hasFilters:      false,
+			name:               "simple query",
+			query:              "config",
+			maxResults:         10,
+			hasFilters:         false,
 			expectedComplexity: LowComplexity,
 		},
 		{
-			name:            "complex query with wildcards",
-			query:           "config AND typescript OR *.json",
-			maxResults:      50,
-			hasFilters:      true,
+			name:               "complex query with wildcards",
+			query:              "config AND typescript OR *.json",
+			maxResults:         50,
+			hasFilters:         true,
 			expectedComplexity: MediumComplexity,
 		},
 		{
-			name:            "high complexity query",
-			query:           "complex query with many terms AND wildcards *",
-			maxResults:      200,
-			hasFilters:      true,
+			name:               "high complexity query",
+			query:              "complex query with many terms AND wildcards *",
+			maxResults:         200,
+			hasFilters:         true,
 			expectedComplexity: HighComplexity,
 		},
 	}

@@ -167,7 +167,7 @@ func handleSearchError(err error, query string) error {
 
 	// Network/connectivity issues
 	if strings.Contains(errMsg, "network") || strings.Contains(errMsg, "timeout") ||
-	   strings.Contains(errMsg, "connection") || strings.Contains(errMsg, "dial") {
+		strings.Contains(errMsg, "connection") || strings.Contains(errMsg, "dial") {
 		return fmt.Errorf(`Network connectivity issue: %w
 
 💡 **Troubleshooting**:

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/silouanwright/gh-scout/internal/github"
 	"github.com/silouanwright/gh-scout/internal/search"
@@ -28,7 +29,7 @@ var (
 	searchOwner     []string
 	searchSize      string
 	searchLimit     int
-	searchPage      int    // New: page-based pagination
+	searchPage      int // New: page-based pagination
 	contextLines    int
 	outputFormat    string
 	outputFile      string // New: export to file
@@ -36,12 +37,13 @@ var (
 	minStars        int
 	sort            string
 	order           string
+	liteMode        bool // --lite flag for lightweight results (saves API quota)
 
 	// Batch search flags (Phase 2)
-	batchRepos      []string // --repos flag for multiple repositories
-	batchOrgs       []string // --orgs flag for multiple organizations
-	aggregateMode   bool     // --aggregate flag
-	compareMode     bool     // --compare flag
+	batchRepos    []string // --repos flag for multiple repositories
+	batchOrgs     []string // --orgs flag for multiple organizations
+	aggregateMode bool     // --aggregate flag
+	compareMode   bool     // --compare flag
 )
 
 // searchCmd represents the search command
@@ -95,6 +97,20 @@ ranking based on repository quality indicators.`,
 }
 
 func runSearch(cmd *cobra.Command, args []string) error {
+	// Validate input parameters to prevent panics
+	if searchLimit <= 0 {
+		return fmt.Errorf("invalid limit: %d (must be greater than 0)", searchLimit)
+	}
+	// searchPage 0 means auto-pagination, negative values are invalid
+	if searchPage < 0 {
+		return fmt.Errorf("invalid page: %d (must be 0 or greater)", searchPage)
+	}
+	// Prevent integer overflow in pagination calculations
+	const maxPage = 10000
+	if searchPage > maxPage {
+		return fmt.Errorf("page number too large (max: %d)", maxPage)
+	}
+
 	// Initialize client if not set (for testing)
 	if searchClient == nil {
 		client, err := createGitHubClient()
@@ -121,8 +137,19 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Searching GitHub with query: %s\n", query)
 	}
 
-	// Execute search with error handling
-	results, err := executeSearch(cmd.Context(), query)
+	// Execute search with error handling and timeout
+	ctx := cmd.Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	// Add timeout for search operations (skip in tests to avoid conflicts with rate limiter)
+	if !isTestEnvironment() {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+	}
+
+	results, err := executeSearch(ctx, query)
 	if err != nil {
 		return handleSearchError(err, query)
 	}
@@ -202,6 +229,7 @@ func executeSinglePageSearch(ctx context.Context, query string) (*github.SearchR
 			Page:    searchPage,
 			PerPage: perPage,
 		},
+		SkipEnrichment: liteMode,
 	}
 
 	results, err := searchClient.SearchCode(ctx, query, opts)
@@ -246,6 +274,7 @@ func executeAutoPageSearch(ctx context.Context, query string) (*github.SearchRes
 				Page:    page,
 				PerPage: perPage,
 			},
+			SkipEnrichment: liteMode,
 		}
 
 		// Execute search with rate limiting and retry logic
@@ -339,7 +368,6 @@ func outputResults(results *github.SearchResults) error {
 	fmt.Print(output)
 	return nil
 }
-
 
 // detectLanguage detects programming language from file path using constants map
 func detectLanguage(path string) string {
@@ -460,17 +488,29 @@ func formatDefaultResults(results *github.SearchResults) (string, error) {
 
 // writeToFile writes content to a file
 func writeToFile(content, filename string) error {
-	// Create directory if it doesn't exist
-	dir := filepath.Dir(filename)
+	// Validate path to prevent directory traversal
+	cleanPath := filepath.Clean(filename)
+	if strings.Contains(cleanPath, "..") {
+		return fmt.Errorf("invalid path: directory traversal not allowed")
+	}
+
+	// Get absolute path for clarity
+	absPath, err := filepath.Abs(cleanPath)
+	if err != nil {
+		return fmt.Errorf("invalid path: %w", err)
+	}
+
+	// Create directory if it doesn't exist (user-only permissions)
+	dir := filepath.Dir(absPath)
 	if dir != "." {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0700); err != nil {
 			return fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	}
 
-	// Write file
-	if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
-		return fmt.Errorf("failed to write to file %s: %w", filename, err)
+	// Write file with restrictive permissions (user-only)
+	if err := os.WriteFile(absPath, []byte(content), 0600); err != nil {
+		return fmt.Errorf("failed to write to file %s: %w", absPath, err)
 	}
 
 	fmt.Printf("✅ Results exported to: %s\n", filename)
@@ -499,6 +539,7 @@ func init() {
 	searchCmd.Flags().IntVar(&minStars, "min-stars", 0, "minimum repository stars")
 	searchCmd.Flags().StringVar(&sort, "sort", "relevance", "sort by: relevance, stars, updated, created")
 	searchCmd.Flags().StringVar(&order, "order", "desc", "sort order: asc, desc")
+	searchCmd.Flags().BoolVar(&liteMode, "lite", false, "lite mode: faster search, skips star counts (saves API quota)")
 
 	// Output control flags (migrated from ghx)
 	searchCmd.Flags().IntVar(&searchLimit, "limit", 50, "maximum results per page (default: 50, max: 100)")
@@ -661,8 +702,24 @@ func formatCompactResults(results *github.SearchResults) (string, error) {
 	return builder.String(), nil
 }
 
+// isTestEnvironment checks if we're running in test mode
+func isTestEnvironment() bool {
+	// Check if running under go test
+	return os.Getenv("GO_TEST") == "1" || strings.HasSuffix(os.Args[0], ".test")
+}
+
 // executeBatchRepoSearch handles multi-repository search with aggregation (Phase 2)
 func executeBatchRepoSearch(ctx context.Context, args []string) error {
+	// Add timeout for batch operations (longer due to multiple searches)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if !isTestEnvironment() {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 60*time.Second)
+		defer cancel()
+	}
+
 	query := strings.Join(args, " ")
 
 	if dryRun {
@@ -742,6 +799,7 @@ func executeBatchRepoSearch(ctx context.Context, args []string) error {
 				Page:    1,
 				PerPage: searchLimit,
 			},
+			SkipEnrichment: liteMode,
 		}
 
 		results, err := searchClient.SearchCode(ctx, finalQuery, opts)

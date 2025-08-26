@@ -8,12 +8,12 @@ import (
 
 // MockClient implements GitHubAPI for testing
 type MockClient struct {
-	SearchResults         map[string]*SearchResults
+	SearchResults          map[string]*SearchResults
 	PaginatedSearchResults map[string]map[int]*SearchResults // query -> page -> results
-	FileContents          map[string][]byte
-	Errors                map[string]error
-	CallLog               []MockCall
-	RateLimits            map[string]*RateLimit
+	FileContents           map[string][]byte
+	Errors                 map[string]error
+	CallLog                []MockCall
+	RateLimits             map[string]*RateLimit
 }
 
 // MockCall represents a logged API call for verification
@@ -26,12 +26,12 @@ type MockCall struct {
 // NewMockClient creates a new mock GitHub API client
 func NewMockClient() *MockClient {
 	return &MockClient{
-		SearchResults:         make(map[string]*SearchResults),
+		SearchResults:          make(map[string]*SearchResults),
 		PaginatedSearchResults: make(map[string]map[int]*SearchResults),
-		FileContents:          make(map[string][]byte),
-		Errors:                make(map[string]error),
-		CallLog:               make([]MockCall, 0),
-		RateLimits:            make(map[string]*RateLimit),
+		FileContents:           make(map[string][]byte),
+		Errors:                 make(map[string]error),
+		CallLog:                make([]MockCall, 0),
+		RateLimits:             make(map[string]*RateLimit),
 	}
 }
 

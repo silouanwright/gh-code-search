@@ -12,11 +12,11 @@ import (
 
 // Config represents the complete configuration structure
 type Config struct {
-	Defaults      DefaultSettings           `yaml:"defaults" json:"defaults"`
-	SavedSearches map[string]SavedSearch    `yaml:"saved_searches" json:"saved_searches"`
-	Analysis      AnalysisSettings          `yaml:"analysis" json:"analysis"`
-	Output        OutputSettings            `yaml:"output" json:"output"`
-	GitHub        GitHubSettings            `yaml:"github" json:"github"`
+	Defaults      DefaultSettings        `yaml:"defaults" json:"defaults"`
+	SavedSearches map[string]SavedSearch `yaml:"saved_searches" json:"saved_searches"`
+	Analysis      AnalysisSettings       `yaml:"analysis" json:"analysis"`
+	Output        OutputSettings         `yaml:"output" json:"output"`
+	GitHub        GitHubSettings         `yaml:"github" json:"github"`
 }
 
 // DefaultSettings contains default values for search operations
@@ -54,14 +54,14 @@ type AnalysisSettings struct {
 
 // OutputSettings configures output formatting and display
 type OutputSettings struct {
-	ColorMode        string `yaml:"color_mode" json:"color_mode"`        // auto, always, never
-	EditorCommand    string `yaml:"editor_command" json:"editor_command"`
-	SavePath         string `yaml:"save_path" json:"save_path"`
-	ShowPatterns     bool   `yaml:"show_patterns" json:"show_patterns"`
-	MaxContentLines  int    `yaml:"max_content_lines" json:"max_content_lines"`
-	ShowRepository   bool   `yaml:"show_repository" json:"show_repository"`
-	ShowStars        bool   `yaml:"show_stars" json:"show_stars"`
-	ShowLineNumbers  bool   `yaml:"show_line_numbers" json:"show_line_numbers"`
+	ColorMode       string `yaml:"color_mode" json:"color_mode"` // auto, always, never
+	EditorCommand   string `yaml:"editor_command" json:"editor_command"`
+	SavePath        string `yaml:"save_path" json:"save_path"`
+	ShowPatterns    bool   `yaml:"show_patterns" json:"show_patterns"`
+	MaxContentLines int    `yaml:"max_content_lines" json:"max_content_lines"`
+	ShowRepository  bool   `yaml:"show_repository" json:"show_repository"`
+	ShowStars       bool   `yaml:"show_stars" json:"show_stars"`
+	ShowLineNumbers bool   `yaml:"show_line_numbers" json:"show_line_numbers"`
 }
 
 // GitHubSettings configures GitHub API behavior
@@ -99,7 +99,8 @@ func LoadFromFile(path string) (*Config, error) {
 // Save saves the configuration to the default location
 func (c *Config) Save() error {
 	configDir := getConfigDir()
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	// Use restrictive permissions for config directory (user-only)
+	if err := os.MkdirAll(configDir, 0700); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
@@ -114,7 +115,8 @@ func (c *Config) SaveToFile(path string) error {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
 
-	if err := os.WriteFile(path, data, 0644); err != nil {
+	// Use restrictive permissions for config file (user read/write only)
+	if err := os.WriteFile(path, data, 0600); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 
@@ -255,16 +257,16 @@ func getConfigPaths() []string {
 	homeDir, _ := os.UserHomeDir()
 
 	paths := []string{
-		".gh-scout.yaml",                                    // Current directory
-		".gh-scout.yml",                                     // Current directory (alternative)
-		filepath.Join(configDir, "gh-scout.yaml"),          // User config directory
-		filepath.Join(configDir, "gh-scout.yml"),           // User config directory (alternative)
+		".gh-scout.yaml", // Current directory
+		".gh-scout.yml",  // Current directory (alternative)
+		filepath.Join(configDir, "gh-scout.yaml"), // User config directory
+		filepath.Join(configDir, "gh-scout.yml"),  // User config directory (alternative)
 	}
 
 	if homeDir != "" {
 		paths = append(paths,
-			filepath.Join(homeDir, ".gh-scout.yaml"),        // Home directory
-			filepath.Join(homeDir, ".gh-scout.yml"),         // Home directory (alternative)
+			filepath.Join(homeDir, ".gh-scout.yaml"), // Home directory
+			filepath.Join(homeDir, ".gh-scout.yml"),  // Home directory (alternative)
 		)
 	}
 
@@ -333,14 +335,14 @@ func defaultConfig() *Config {
 			PatternThreshold: 0.3,
 		},
 		Output: OutputSettings{
-			ColorMode:        "auto",
-			EditorCommand:    "",
-			SavePath:         "",
-			ShowPatterns:     true,
-			MaxContentLines:  50,
-			ShowRepository:   true,
-			ShowStars:        true,
-			ShowLineNumbers:  false,
+			ColorMode:       "auto",
+			EditorCommand:   "",
+			SavePath:        "",
+			ShowPatterns:    true,
+			MaxContentLines: 50,
+			ShowRepository:  true,
+			ShowStars:       true,
+			ShowLineNumbers: false,
 		},
 		GitHub: GitHubSettings{
 			RateLimitBuffer: 5,

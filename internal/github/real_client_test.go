@@ -40,30 +40,8 @@ func TestNewRealClient(t *testing.T) {
 	}
 }
 
-func TestNewRealClientWithToken(t *testing.T) {
-	tests := []struct {
-		name  string
-		token string
-	}{
-		{
-			name:  "creates client with valid token",
-			token: "ghp_example_token_123",
-		},
-		{
-			name:  "creates client with empty token",
-			token: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			client := NewRealClientWithToken(tt.token)
-
-			assert.NotNil(t, client)
-			assert.NotNil(t, client.client)
-		})
-	}
-}
+// NewRealClientWithToken was removed since go-gh handles auth automatically
+// Authentication is now handled via gh auth token or GH_TOKEN env var
 
 func TestRealClient_SearchCode_Integration(t *testing.T) {
 	// Skip if we can't create a real client (no auth)
@@ -326,14 +304,8 @@ func TestErrorHandling(t *testing.T) {
 }
 
 func TestHelperFunctions(t *testing.T) {
-	t.Run("convertSearchResults", func(t *testing.T) {
-		// This would require importing github.com/google/go-github/v57/github
-		// and creating test data - for now just verify the function exists
+	t.Run("formatGoGHError", func(t *testing.T) {
+		// Test error conversion from go-gh API errors
 		// Full testing would be done via integration tests
-	})
-
-	t.Run("extractValidationErrors", func(t *testing.T) {
-		// This would require creating github.ErrorResponse test data
-		// For now verify function exists and basic behavior
 	})
 }

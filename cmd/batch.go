@@ -48,30 +48,30 @@ type BatchSearchConfig struct {
 
 // BatchResults holds aggregated results from multiple searches
 type BatchResults struct {
-	Name         string                     `json:"name"`
-	Description  string                     `json:"description"`
-	SearchCount  int                        `json:"search_count"`
-	TotalResults int                        `json:"total_results"`
-	Results      []BatchSearchResult        `json:"results"`
-	Comparisons  []BatchComparisonResult    `json:"comparisons,omitempty"`
+	Name         string                  `json:"name"`
+	Description  string                  `json:"description"`
+	SearchCount  int                     `json:"search_count"`
+	TotalResults int                     `json:"total_results"`
+	Results      []BatchSearchResult     `json:"results"`
+	Comparisons  []BatchComparisonResult `json:"comparisons,omitempty"`
 }
 
 // BatchSearchResult holds results from a single batch search
 type BatchSearchResult struct {
-	Name         string                 `json:"name"`
-	Query        string                 `json:"query"`
-	Tags         []string              `json:"tags,omitempty"`
-	ResultCount  int                   `json:"result_count"`
-	Results      *github.SearchResults `json:"results"`
+	Name        string                `json:"name"`
+	Query       string                `json:"query"`
+	Tags        []string              `json:"tags,omitempty"`
+	ResultCount int                   `json:"result_count"`
+	Results     *github.SearchResults `json:"results"`
 }
 
 // BatchComparisonResult holds comparison analysis between searches
 type BatchComparisonResult struct {
-	Name            string                `json:"name"`
-	SearchNames     []string             `json:"search_names"`
-	CommonPatterns  []string             `json:"common_patterns"`
-	KeyDifferences  []string             `json:"key_differences"`
-	Summary         string               `json:"summary"`
+	Name           string   `json:"name"`
+	SearchNames    []string `json:"search_names"`
+	CommonPatterns []string `json:"common_patterns"`
+	KeyDifferences []string `json:"key_differences"`
+	Summary        string   `json:"summary"`
 }
 
 var batchCmd = &cobra.Command{
@@ -358,6 +358,7 @@ func executeSingleBatchSearch(ctx context.Context, searchConfig BatchSearchConfi
 			Page:    1,
 			PerPage: searchConfig.MaxResults,
 		},
+		SkipEnrichment: false, // Batch searches typically want full info
 	}
 
 	// Execute search

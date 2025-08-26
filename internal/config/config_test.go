@@ -175,7 +175,7 @@ func TestSavedSearchOperations(t *testing.T) {
 	assert.Equal(t, "useEffect", updated.Query)
 	assert.Equal(t, "Updated description", updated.Description)
 	assert.Equal(t, originalCreated, updated.Created) // Should preserve
-	assert.Equal(t, 0, updated.UseCount)             // Should preserve
+	assert.Equal(t, 0, updated.UseCount)              // Should preserve
 
 	// Test using saved search
 	err := config.UseSavedSearch("test-search")
@@ -230,7 +230,7 @@ func TestListSavedSearches(t *testing.T) {
 	assert.Len(t, searches, 3)
 	assert.Equal(t, "middle-search", searches[0].Name) // Most recently used
 	assert.Equal(t, "new-search", searches[1].Name)
-	assert.Equal(t, "old-search", searches[2].Name)   // Least recently used
+	assert.Equal(t, "old-search", searches[2].Name) // Least recently used
 }
 
 func TestConfigFileOperations(t *testing.T) {
@@ -323,10 +323,10 @@ func TestApplyDefaults(t *testing.T) {
 	applyDefaults(config)
 
 	// Check that missing values were filled with defaults
-	assert.Equal(t, 50, config.Defaults.MaxResults)     // Should be filled
-	assert.Equal(t, 10, config.Defaults.ContextLines)   // Should be preserved
-	assert.Equal(t, "auto", config.Output.ColorMode)    // Should be filled
-	assert.Equal(t, 25, config.Output.MaxContentLines)  // Should be preserved
+	assert.Equal(t, 50, config.Defaults.MaxResults)    // Should be filled
+	assert.Equal(t, 10, config.Defaults.ContextLines)  // Should be preserved
+	assert.Equal(t, "auto", config.Output.ColorMode)   // Should be filled
+	assert.Equal(t, 25, config.Output.MaxContentLines) // Should be preserved
 
 	// Check that SavedSearches map was initialized
 	assert.NotNil(t, config.SavedSearches)

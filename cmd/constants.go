@@ -3,7 +3,7 @@ package cmd
 // Error messages and help text constants (refactored from ghx issue #3)
 const (
 	// Error message patterns
-	ErrorMessageRateLimit         = "rate limit exceeded"
+	ErrorMessageRateLimit        = "rate limit exceeded"
 	ErrorMessageAuthentication   = "authentication required"
 	ErrorMessageNoResults        = "No results found"
 	ErrorMessageInvalidQuery     = "invalid query syntax"
@@ -127,16 +127,16 @@ const (
 	LanguageDockerfile = "dockerfile"
 
 	// Command success messages
-	MessageConfigReset    = "✅ Configuration reset to defaults"
-	MessageEditorReset    = "✅ Editor preference reset"
-	MessageLanguageSet    = "✅ Default language set to: %s"
-	MessageEditorSet      = "✅ Editor set to: %s"
-	MessageFormatSet      = "✅ Default output format set to: %s"
-	MessageSortSet        = "✅ Default sort order set to: %s"
+	MessageConfigReset = "✅ Configuration reset to defaults"
+	MessageEditorReset = "✅ Editor preference reset"
+	MessageLanguageSet = "✅ Default language set to: %s"
+	MessageEditorSet   = "✅ Editor set to: %s"
+	MessageFormatSet   = "✅ Default output format set to: %s"
+	MessageSortSet     = "✅ Default sort order set to: %s"
 
 	// Dry run messages
-	MessageDryRunQuery = "Would search GitHub with query: %s"
-	MessageVerboseQuery = "Searching GitHub with query: %s"
+	MessageDryRunQuery    = "Would search GitHub with query: %s"
+	MessageVerboseQuery   = "Searching GitHub with query: %s"
 	MessageVerboseResults = "Found %d results"
 )
 

@@ -3,6 +3,7 @@ package output
 import (
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -601,14 +602,10 @@ func (f *MarkdownFormatter) getTopRepositories(results *github.SearchResults, li
 		repos = append(repos, repoInfo{name: name, stars: stars})
 	}
 
-	// Simple sort by stars (descending)
-	for i := 0; i < len(repos); i++ {
-		for j := i + 1; j < len(repos); j++ {
-			if repos[j].stars > repos[i].stars {
-				repos[i], repos[j] = repos[j], repos[i]
-			}
-		}
-	}
+	// Efficient sort by stars (descending) using built-in sort
+	sort.Slice(repos, func(i, j int) bool {
+		return repos[i].stars > repos[j].stars
+	})
 
 	// Limit results
 	if len(repos) > limit {

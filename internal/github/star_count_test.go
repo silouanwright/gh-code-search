@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/google/go-github/v57/github"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -62,87 +61,36 @@ func TestRepositoryEnrichment(t *testing.T) {
 	})
 }
 
-func TestConvertRepositoryWithNilStarCount(t *testing.T) {
-	tests := []struct {
-		name          string
-		inputRepo     *github.Repository
-		expectedStars *int
-	}{
-		{
-			name: "repository with valid star count",
-			inputRepo: &github.Repository{
-				FullName:        github.String("test/repo"),
-				StargazersCount: github.Int(1500),
-			},
-			expectedStars: github.Int(1500),
-		},
-		{
-			name: "repository with nil star count",
-			inputRepo: &github.Repository{
-				FullName:        github.String("test/repo"),
-				StargazersCount: nil,
-			},
-			expectedStars: nil,
-		},
-		{
-			name: "repository with zero star count",
-			inputRepo: &github.Repository{
-				FullName:        github.String("test/repo"),
-				StargazersCount: github.Int(0),
-			},
-			expectedStars: github.Int(0),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := convertRepository(tt.inputRepo)
-
-			if tt.expectedStars == nil {
-				assert.Nil(t, result.StargazersCount)
-			} else {
-				assert.NotNil(t, result.StargazersCount)
-				assert.Equal(t, *tt.expectedStars, *result.StargazersCount)
-			}
-
-			// Verify other fields are preserved
-			assert.Equal(t, *tt.inputRepo.FullName, *result.FullName)
-		})
-	}
-}
-
-func TestGetStringFromPtr(t *testing.T) {
+func TestGetIntValue(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    *string
-		expected string
+		input    *int
+		expected int
 	}{
 		{
-			name:     "valid string pointer",
-			input:    StringPtr("test-value"),
-			expected: "test-value",
+			name:     "valid int pointer",
+			input:    IntPtr(42),
+			expected: 42,
 		},
 		{
-			name:     "nil string pointer",
+			name:     "nil int pointer",
 			input:    nil,
-			expected: "",
+			expected: 0,
 		},
 		{
-			name:     "empty string pointer",
-			input:    StringPtr(""),
-			expected: "",
+			name:     "zero int pointer",
+			input:    IntPtr(0),
+			expected: 0,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := getStringFromPtr(tt.input)
+			result := getIntValue(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
-
-// Note: StringPtr and IntPtr are already defined in client.go
 
 func TestStarCountDisplayInOutput(t *testing.T) {
 	t.Run("star count correctly displayed in markdown output", func(t *testing.T) {

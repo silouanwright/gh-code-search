@@ -612,12 +612,12 @@ func TestSearchCommandIntegration(t *testing.T) {
 // TestLimitFunctionality tests limit functionality including pagination (Issue #2 from ghx)
 func TestLimitFunctionality(t *testing.T) {
 	tests := []struct {
-		name           string
-		limit          int
-		mockSetup      func(*github.MockClient)
-		expectedCalls  int
-		expectedItems  int
-		description    string
+		name          string
+		limit         int
+		mockSetup     func(*github.MockClient)
+		expectedCalls int
+		expectedItems int
+		description   string
 	}{
 		{
 			name:  "limit under 100 - single API call",
@@ -945,6 +945,135 @@ func TestGhxCompatibility(t *testing.T) {
 
 			// Verify API was called
 			assert.Equal(t, 1, mockClient.GetCallCount("SearchCode"), "Should execute search for ghx command: %s", tt.ghxCommand)
+		})
+	}
+}
+
+// TestSearchLimitEdgeCases tests edge cases for limit values that could cause panics
+func TestSearchLimitEdgeCases(t *testing.T) {
+	// Save original values
+	originalClient := searchClient
+	originalLimit := searchLimit
+	originalPage := searchPage
+	originalOutput := outputFormat
+
+	// Restore after test
+	defer func() {
+		searchClient = originalClient
+		searchLimit = originalLimit
+		searchPage = originalPage
+		outputFormat = originalOutput
+	}()
+
+	tests := []struct {
+		name          string
+		args          []string
+		limit         int
+		page          int
+		setupMock     func(*github.MockClient)
+		expectPanic   bool
+		expectedError string
+	}{
+		{
+			name:          "zero limit returns error",
+			args:          []string{"test"},
+			limit:         0,
+			page:          1,
+			expectPanic:   false,
+			expectedError: "invalid limit: 0 (must be greater than 0)",
+			setupMock: func(mock *github.MockClient) {
+				// Won't be called due to validation
+			},
+		},
+		{
+			name:          "negative limit returns error",
+			args:          []string{"test"},
+			limit:         -5,
+			page:          1,
+			expectPanic:   false,
+			expectedError: "invalid limit: -5 (must be greater than 0)",
+			setupMock: func(mock *github.MockClient) {
+				// Won't be called due to validation
+			},
+		},
+		{
+			name:        "zero page means auto-pagination (valid)",
+			args:        []string{"test"},
+			limit:       10,
+			page:        0,
+			expectPanic: false,
+			setupMock: func(mock *github.MockClient) {
+				mock.SetSearchResults("test", github.CreateTestSearchResults(10,
+					github.CreateTestSearchItem("test/repo", "test.go", "test content"),
+				))
+			},
+			expectedError: "",
+		},
+		{
+			name:          "negative page returns error",
+			args:          []string{"test"},
+			limit:         10,
+			page:          -1,
+			expectPanic:   false,
+			expectedError: "invalid page: -1 (must be 0 or greater)",
+			setupMock: func(mock *github.MockClient) {
+				// Won't be called due to validation
+			},
+		},
+		{
+			name:        "valid parameters work correctly",
+			args:        []string{"test"},
+			limit:       10,
+			page:        1,
+			expectPanic: false,
+			setupMock: func(mock *github.MockClient) {
+				mock.SetSearchResults("test", github.CreateTestSearchResults(10,
+					github.CreateTestSearchItem("test/repo", "test.go", "test content"),
+				))
+			},
+			expectedError: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset flags
+			resetSearchFlags()
+
+			// Setup mock client
+			mockClient := github.NewMockClient()
+			searchClient = mockClient
+
+			if tt.setupMock != nil {
+				tt.setupMock(mockClient)
+			}
+
+			// Set test-specific flags
+			searchLimit = tt.limit
+			searchPage = tt.page
+			outputFormat = "markdown"
+
+			// Capture output
+			output := &bytes.Buffer{}
+			searchCmd.SetOut(output)
+			searchCmd.SetErr(output)
+
+			if tt.expectPanic {
+				// Test that it panics
+				assert.Panics(t, func() {
+					_ = runSearch(searchCmd, tt.args)
+				}, "Expected panic for limit=%d, page=%d", tt.limit, tt.page)
+			} else {
+				// Test that it doesn't panic and handles error gracefully
+				err := runSearch(searchCmd, tt.args)
+
+				if tt.expectedError != "" {
+					assert.Error(t, err, "Expected error for limit=%d, page=%d", tt.limit, tt.page)
+					if err != nil {
+						assert.Contains(t, err.Error(), tt.expectedError)
+					}
+				}
+			}
 		})
 	}
 }

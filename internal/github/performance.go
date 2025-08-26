@@ -8,32 +8,32 @@ import (
 
 // PerformanceMetrics tracks performance data for batch operations
 type PerformanceMetrics struct {
-	StartTime         time.Time     `json:"start_time"`
-	EndTime           time.Time     `json:"end_time"`
-	TotalDuration     time.Duration `json:"total_duration"`
-	TotalSearches     int           `json:"total_searches"`
-	SuccessfulSearches int          `json:"successful_searches"`
-	FailedSearches    int           `json:"failed_searches"`
-	TotalResults      int           `json:"total_results"`
-	RetryCount        int           `json:"retry_count"`
-	DelayTime         time.Duration `json:"total_delay_time"`
+	StartTime           time.Time     `json:"start_time"`
+	EndTime             time.Time     `json:"end_time"`
+	TotalDuration       time.Duration `json:"total_duration"`
+	TotalSearches       int           `json:"total_searches"`
+	SuccessfulSearches  int           `json:"successful_searches"`
+	FailedSearches      int           `json:"failed_searches"`
+	TotalResults        int           `json:"total_results"`
+	RetryCount          int           `json:"retry_count"`
+	DelayTime           time.Duration `json:"total_delay_time"`
 	AverageResponseTime time.Duration `json:"average_response_time"`
-	RateLimitHits     int           `json:"rate_limit_hits"`
-	AbuseDetections   int           `json:"abuse_detections"`
-	ServerErrors      int           `json:"server_errors"`
+	RateLimitHits       int           `json:"rate_limit_hits"`
+	AbuseDetections     int           `json:"abuse_detections"`
+	ServerErrors        int           `json:"server_errors"`
 }
 
 // SearchMetrics tracks metrics for individual searches
 type SearchMetrics struct {
-	SearchName    string        `json:"search_name"`
-	Query         string        `json:"query"`
-	StartTime     time.Time     `json:"start_time"`
-	Duration      time.Duration `json:"duration"`
-	ResultCount   int           `json:"result_count"`
-	RetryCount    int           `json:"retry_count"`
-	DelayTime     time.Duration `json:"delay_time"`
-	ErrorType     string        `json:"error_type,omitempty"`
-	Success       bool          `json:"success"`
+	SearchName  string        `json:"search_name"`
+	Query       string        `json:"query"`
+	StartTime   time.Time     `json:"start_time"`
+	Duration    time.Duration `json:"duration"`
+	ResultCount int           `json:"result_count"`
+	RetryCount  int           `json:"retry_count"`
+	DelayTime   time.Duration `json:"delay_time"`
+	ErrorType   string        `json:"error_type,omitempty"`
+	Success     bool          `json:"success"`
 }
 
 // PerformanceTracker manages performance tracking for batch operations
@@ -304,8 +304,8 @@ func classifyError(err error) string {
 	// Check for server errors by string matching
 	errLower := strings.ToLower(errStr)
 	if strings.Contains(errLower, "500") || strings.Contains(errLower, "502") ||
-	   strings.Contains(errLower, "503") || strings.Contains(errLower, "504") ||
-	   strings.Contains(errLower, "server error") {
+		strings.Contains(errLower, "503") || strings.Contains(errLower, "504") ||
+		strings.Contains(errLower, "server error") {
 		return "server_error"
 	}
 

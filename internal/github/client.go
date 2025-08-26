@@ -14,9 +14,10 @@ type GitHubAPI interface {
 
 // SearchOptions configures search requests
 type SearchOptions struct {
-	Sort        string // relevance, indexed, created, updated
-	Order       string // asc, desc
-	ListOptions ListOptions
+	Sort           string // relevance, indexed, created, updated
+	Order          string // asc, desc
+	ListOptions    ListOptions
+	SkipEnrichment bool // Skip fetching additional repository metadata (stars, etc)
 }
 
 // ListOptions specifies pagination options
@@ -27,9 +28,9 @@ type ListOptions struct {
 
 // SearchResults represents GitHub search results
 type SearchResults struct {
-	Total             *int          `json:"total_count,omitempty"`
-	IncompleteResults *bool         `json:"incomplete_results,omitempty"`
-	Items             []SearchItem  `json:"items,omitempty"`
+	Total             *int         `json:"total_count,omitempty"`
+	IncompleteResults *bool        `json:"incomplete_results,omitempty"`
+	Items             []SearchItem `json:"items,omitempty"`
 }
 
 // SearchItem represents a single search result
@@ -96,6 +97,21 @@ type RateLimit struct {
 	Limit     int       `json:"limit"`
 	Remaining int       `json:"remaining"`
 	Reset     time.Time `json:"reset"`
+}
+
+// Helper methods for Repository
+func (r *Repository) GetOwnerLogin() string {
+	if r.Owner != nil && r.Owner.Login != nil {
+		return *r.Owner.Login
+	}
+	return ""
+}
+
+func (r *Repository) GetName() string {
+	if r.Name != nil {
+		return *r.Name
+	}
+	return ""
 }
 
 // Helper functions for pointer conversion
